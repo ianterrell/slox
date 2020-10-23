@@ -6,6 +6,7 @@ let package = Package(
     name: "slox",
     products: [
         .executable(name: "slox", targets: ["Slox"]),
+        .executable(name: "genslox", targets: ["Gen"]),
         .library(name: "Libslox", targets: ["Libslox"]),
     ],
     dependencies: [
@@ -14,6 +15,7 @@ let package = Package(
     ],
     targets: [
         .target(name: "Slox", dependencies: ["Libslox"]),
+        .target(name: "Gen", dependencies: []),
         .target(name: "Libslox", dependencies: []),
         .testTarget(name: "LibsloxTests", dependencies: ["Libslox"]),
     ]

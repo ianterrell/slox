@@ -3,59 +3,78 @@ import XCTest
 
 final class ScannerTests: XCTestCase {
   func testEOF() {
-    let expected = Token(type: .EOF, lexeme: "", line: 1)
-    assertFirstToken(in: "", is: expected)
+    let src = ""
+    guard case .EOF(location: src.startIndex, lexeme: "") = firstToken(in: src) else {
+      return XCTFail("Unexpected token!")
+    }
   }
 
   func testStar() {
-    let expected = Token(type: .STAR, lexeme: "*", line: 1)
-    assertFirstToken(in: "*z", is: expected)
+    let src = "*z"
+    guard case .STAR(location: src.startIndex, lexeme: "*") = firstToken(in: src) else {
+      return XCTFail("Unexpected token!")
+    }
   }
 
   func testBang() {
-    let expected = Token(type: .BANG, lexeme: "!", line: 1)
-    assertFirstToken(in: "!a", is: expected)
+    let src = "!a"
+    guard case .BANG(location: src.startIndex, lexeme: "!") = firstToken(in: src) else {
+      return XCTFail("Unexpected token!")
+    }
   }
 
   func testBangEqual() {
-    let expected = Token(type: .BANG_EQUAL, lexeme: "!=", line: 1)
-    assertFirstToken(in: "!= b", is: expected)
+    let src = "!= b"
+    guard case .BANG_EQUAL(location: src.startIndex, lexeme: "!=") = firstToken(in: src) else {
+      return XCTFail("Unexpected token!")
+    }
   }
 
   func testComment() {
-    let expected = Token(type: .EOF, lexeme: "", line: 1)
-    assertFirstToken(in: "// This is a comment", is: expected)
+    let src = "// This is a comment"
+    guard case .EOF(location: _, lexeme: "") = firstToken(in: src) else {
+      return XCTFail("Unexpected token!")
+    }
   }
 
   func testWhitespace() {
-    let expected = Token(type: .EOF, lexeme: "", line: 1)
-    assertFirstToken(in: "   \t\t", is: expected)
-  }
-
-  func testNewlines() {
-    let expected = Token(type: .EOF, lexeme: "", line: 3)
-    assertFirstToken(in: "   \n\n", is: expected)
+    let src = "   \t\t"
+    guard case .EOF(location: _, lexeme: "") = firstToken(in: src) else {
+      return XCTFail("Unexpected token!")
+    }
   }
 
   func testString() {
-    let expected = Token(type: .STRING, lexeme: "\"hi mom\"", line: 1)
-    assertFirstToken(in: "\"hi mom\" !", is: expected)
+    let src = "\"hi mom\" !"
+    guard case .STRING(location: src.startIndex, lexeme: "\"hi mom\"", value: "hi mom") = firstToken(in: src) else {
+      return XCTFail("Unexpected token!")
+    }
+  }
+
+  func testNumber() {
+    let src = "6.28 is tau"
+    guard case .NUMBER(location: src.startIndex, lexeme: "6.28", value: 6.28) = firstToken(in: src) else {
+      return XCTFail("Unexpected token!")
+    }
   }
 
   func testElse() {
-    let expected = Token(type: .ELSE, lexeme: "else", line: 1)
-    assertFirstToken(in: "else foo", is: expected)
+    let src = "else foo"
+    guard case .ELSE(location: src.startIndex, lexeme: "else") = firstToken(in: src) else {
+      return XCTFail("Unexpected token!")
+    }
   }
 
   func testIdentifier() {
-    let expected = Token(type: .IDENTIFIER, lexeme: "foo", line: 1)
-    assertFirstToken(in: "foo bar", is: expected)
+    let src = "foo bar"
+    guard case .IDENTIFIER(location: src.startIndex, lexeme: "foo") = firstToken(in: src) else {
+      return XCTFail("Unexpected token!")
+    }
   }
 
-  func assertFirstToken(in source: String, is expected: Token) {
+  func firstToken(in source: String) -> Token? {
     let interpreter = Interpreter()
     let scanner = Scanner(source: source, runningIn: interpreter)
-    XCTAssertEqual(expected, scanner.scanTokens().first)
-    XCTAssertFalse(interpreter.hadError)
+    return scanner.scanTokens().first
   }
 }

@@ -15,28 +15,8 @@ class Scanner {
 
   var start: String.Index
   var current: String.Index
-  var line = 1
   var isAtEnd: Bool { current >= source.endIndex }
   var currentLexeme: String { String(source[start..<current]) }
-
-  static let keywordMap: [String: TokenType] = [
-    "and": .AND,
-    "class": .CLASS,
-    "else": .ELSE,
-    "false": .FALSE,
-    "for": .FOR,
-    "fun": .FUN,
-    "if": .IF,
-    "nil": .NIL,
-    "or": .OR,
-    "print": .PRINT,
-    "return": .RETURN,
-    "super": .SUPER,
-    "this": .THIS,
-    "true": .TRUE,
-    "var": .VAR,
-    "while": .WHILE,
-  ]
 
   init(source: String, runningIn interpreter: Interpreter) {
     self.source = source
@@ -48,59 +28,58 @@ class Scanner {
   func scanTokens() -> [Token] {
     while !isAtEnd {
       start = current
-      scanToken()
+      if let t = scanToken() {
+        tokens.append(t)
+      }
     }
-    tokens.append(Token(type: .EOF, lexeme: "", line: line))
+    tokens.append(.EOF(location: start, lexeme: ""))
     return tokens
   }
 
-  func scanToken() {
+  func scanToken() -> Token? {
     let c = advance()
     switch (c) {
-    case "(": addToken(.LEFT_PAREN)
-    case ")": addToken(.RIGHT_PAREN)
-    case "{": addToken(.LEFT_BRACE)
-    case "}": addToken(.RIGHT_BRACE)
-    case ",": addToken(.COMMA)
-    case ".": addToken(.DOT)
-    case "-": addToken(.MINUS)
-    case "+": addToken(.PLUS)
-    case ";": addToken(.SEMICOLON)
-    case "*": addToken(.STAR)
-    case "!": addToken(match("=") ? .BANG_EQUAL : .BANG)
-    case "=": addToken(match("=") ? .EQUAL_EQUAL : .EQUAL)
-    case "<": addToken(match("=") ? .LESS_EQUAL : .LESS)
-    case ">": addToken(match("=") ? .GREATER_EQUAL : .GREATER)
-    case "/":
+    case "(": return .LEFT_PAREN(location: start, lexeme: currentLexeme)
+    case ")": return .RIGHT_PAREN(location: start, lexeme: currentLexeme)
+    case "{": return .LEFT_BRACE(location: start, lexeme: currentLexeme)
+    case "}": return .RIGHT_BRACE(location: start, lexeme: currentLexeme)
+    case ",": return .COMMA(location: start, lexeme: currentLexeme)
+    case ".": return .DOT(location: start, lexeme: currentLexeme)
+    case "-": return .MINUS(location: start, lexeme: currentLexeme)
+    case "+": return .PLUS(location: start, lexeme: currentLexeme)
+    case ";": return .SEMICOLON(location: start, lexeme: currentLexeme)
+    case "*": return .STAR(location: start, lexeme: currentLexeme)
+    case "!": return match("=") ? .BANG_EQUAL(location: start, lexeme: currentLexeme) : .BANG(location: start, lexeme: currentLexeme)
+    case "=": return match("=") ? .EQUAL_EQUAL(location: start, lexeme: currentLexeme) : .EQUAL(location: start, lexeme: currentLexeme)
+    case "<": return match("=") ? .LESS_EQUAL(location: start, lexeme: currentLexeme) : .LESS(location: start, lexeme: currentLexeme)
+    case ">": return match("=") ? .GREATER_EQUAL(location: start, lexeme: currentLexeme) : .GREATER(location: start, lexeme: currentLexeme)    case "/":
       if match("/") {
         // A comment goes until the end of the line.
         while peek() != "\n" && !isAtEnd {
           advance()
         }
       } else {
-        addToken(.SLASH)
+        return .SLASH(location: start, lexeme: currentLexeme)
       }
-    case "\"": string()
+    case "\"": return string()
 
     // Ignore whitespace.
-    case " ": fallthrough
-    case "\r": fallthrough
+    case " ": break
+    case "\r": break
     case "\t": break
-    case "\n": line += 1
+    case "\n": break
 
     default:
       if isDigit(c) {
-        number()
+        return number()
       } else if isAlpha(c) {
-        identifier()
+        return identifier()
       } else {
-        interpreter.reportError(line: line, message: "Unexpected character: \(c)")
+        interpreter.reportError(location: start, message: "Unexpected character: \(c)")
       }
     }
-  }
-
-  func addToken(_ type: TokenType) {
-    tokens.append(Token(type: type, lexeme: currentLexeme, line: line))
+    
+    return nil
   }
 
   func peek() -> Character {
@@ -146,22 +125,22 @@ class Scanner {
     return isAlpha(c) || isDigit(c)
   }
 
-  func string() {
+  func string() -> Token? {
     while peek() != "\"" && !isAtEnd {
-      if peek() == "\n" { line += 1 }
       advance()
     }
 
     guard !isAtEnd else {
-      interpreter.reportError(line: line, message: "Unterminated string")
-      return
+      interpreter.reportError(location: start, message: "Unterminated string")
+      return nil
     }
 
     advance() // Consume the closing "
-    addToken(.STRING)
+    let value = String(source[source.index(after: start)..<source.index(before: current)])
+    return .STRING(location: start, lexeme: currentLexeme, value: value)
   }
 
-  func number() {
+  func number() -> Token? {
     while isDigit(peek()) { advance() }
     // Look for a fractional part.
     if peek() == "." && isDigit(peekNext()) {
@@ -169,15 +148,19 @@ class Scanner {
       while isDigit(peek()) { advance() }
     }
 
-    addToken(.NUMBER)
+    guard let value = Double(currentLexeme) else {
+      interpreter.reportError(location: start, message: "Not a number")
+      return nil
+    }
+    return .NUMBER(location: start, lexeme: currentLexeme, value: value)
   }
 
-  func identifier() {
+  func identifier() -> Token {
     while isAlphanumeric(peek()) { advance() }
-    if let keyword = Scanner.keywordMap[currentLexeme] {
-      addToken(keyword)
+    if let keyword = Token(location: start, lexeme: currentLexeme) {
+      return keyword
     } else {
-      addToken(.IDENTIFIER)
+      return .IDENTIFIER(location: start, lexeme: currentLexeme)
     }
   }
 }

@@ -44,12 +44,7 @@ public class Interpreter {
     print(tokens)
   }
 
-  func reportError(line: Int, where: String? = nil, message: String) {
-    if let `where` = `where` {
-      print("[\(line)] Error \(`where`): \(message)")
-    } else {
-      print("[\(line)] Error: \(message)")
-    }
+  func reportError(location: String.Index, message: String) {
     hadError = true
   }
 }
