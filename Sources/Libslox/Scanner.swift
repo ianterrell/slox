@@ -7,36 +7,70 @@
 
 import Foundation
 
-class Scanner {
-  unowned let interpreter: Interpreter
+public struct ScanError: LoxError, CompositeLoxError {
+  public enum Single: LoxError, SourceFindable, CustomStringConvertible {
+    case unexpectedCharacter(location: String.Index)
+    case unterminatedString(location: String.Index)
+    case notANumber(location: String.Index)
 
+    public var description: String {
+      switch self {
+      case .unexpectedCharacter: return "Unexpected character"
+      case .unterminatedString: return "Unterminated string"
+      case .notANumber: return "Not a number"
+      }
+    }
+
+    public var index: String.Index {
+      switch self {
+      case .unexpectedCharacter(let i): return i
+      case .unterminatedString(let i): return i
+      case .notANumber(let i): return i
+      }
+    }
+  }
+
+  public let errors: [LoxError]
+}
+
+class Scanner {
   let source: String
-  var tokens: [Token] = []
 
   var start: String.Index
   var current: String.Index
   var isAtEnd: Bool { current >= source.endIndex }
   var currentLexeme: String { String(source[start..<current]) }
 
-  init(source: String, runningIn interpreter: Interpreter) {
+  init(source: String) {
     self.source = source
     self.start = source.startIndex
     self.current = source.startIndex
-    self.interpreter = interpreter
   }
 
-  func scanTokens() -> [Token] {
+  func scanTokens() throws -> [Token] {
+    var tokens: [Token] = []
+    var errors: [ScanError.Single] = []
     while !isAtEnd {
       start = current
-      if let t = scanToken() {
-        tokens.append(t)
+      do {
+        if let token = try scanToken() {
+          tokens.append(token)
+        }
+      } catch let error as ScanError.Single {
+        errors.append(error)
+      } catch {
+        fatalError("Unexpected error: \(error)")
       }
     }
     tokens.append(.EOF(location: start, lexeme: ""))
-    return tokens
+    if errors.isEmpty {
+      return tokens
+    } else {
+      throw ScanError(errors: errors)
+    }
   }
 
-  func scanToken() -> Token? {
+  func scanToken() throws -> Token? {
     let c = advance()
     switch (c) {
     case "(": return .LEFT_PAREN(location: start, lexeme: currentLexeme)
@@ -52,7 +86,8 @@ class Scanner {
     case "!": return match("=") ? .BANG_EQUAL(location: start, lexeme: currentLexeme) : .BANG(location: start, lexeme: currentLexeme)
     case "=": return match("=") ? .EQUAL_EQUAL(location: start, lexeme: currentLexeme) : .EQUAL(location: start, lexeme: currentLexeme)
     case "<": return match("=") ? .LESS_EQUAL(location: start, lexeme: currentLexeme) : .LESS(location: start, lexeme: currentLexeme)
-    case ">": return match("=") ? .GREATER_EQUAL(location: start, lexeme: currentLexeme) : .GREATER(location: start, lexeme: currentLexeme)    case "/":
+    case ">": return match("=") ? .GREATER_EQUAL(location: start, lexeme: currentLexeme) : .GREATER(location: start, lexeme: currentLexeme)
+    case "/":
       if match("/") {
         // A comment goes until the end of the line.
         while peek() != "\n" && !isAtEnd {
@@ -61,7 +96,7 @@ class Scanner {
       } else {
         return .SLASH(location: start, lexeme: currentLexeme)
       }
-    case "\"": return string()
+    case "\"": return try string()
 
     // Ignore whitespace.
     case " ": break
@@ -71,15 +106,15 @@ class Scanner {
 
     default:
       if isDigit(c) {
-        return number()
-      } else if isAlpha(c) {
-        return identifier()
-      } else {
-        interpreter.reportError(location: start, message: "Unexpected character: \(c)")
+        return try number()
       }
+      if isAlpha(c) {
+        return identifier()
+      }
+      throw ScanError.Single.unexpectedCharacter(location: start)
     }
-    
-    return nil
+
+    return nil // noop on full advancing
   }
 
   func peek() -> Character {
@@ -125,14 +160,13 @@ class Scanner {
     return isAlpha(c) || isDigit(c)
   }
 
-  func string() -> Token? {
+  func string() throws -> Token {
     while peek() != "\"" && !isAtEnd {
       advance()
     }
 
     guard !isAtEnd else {
-      interpreter.reportError(location: start, message: "Unterminated string")
-      return nil
+      throw ScanError.Single.unterminatedString(location: start)
     }
 
     advance() // Consume the closing "
@@ -140,7 +174,7 @@ class Scanner {
     return .STRING(location: start, lexeme: currentLexeme, value: value)
   }
 
-  func number() -> Token? {
+  func number() throws -> Token {
     while isDigit(peek()) { advance() }
     // Look for a fractional part.
     if peek() == "." && isDigit(peekNext()) {
@@ -149,8 +183,7 @@ class Scanner {
     }
 
     guard let value = Double(currentLexeme) else {
-      interpreter.reportError(location: start, message: "Not a number")
-      return nil
+      throw ScanError.Single.notANumber(location: start)
     }
     return .NUMBER(location: start, lexeme: currentLexeme, value: value)
   }

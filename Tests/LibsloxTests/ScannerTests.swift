@@ -73,8 +73,7 @@ final class ScannerTests: XCTestCase {
   }
 
   func firstToken(in source: String) -> Token? {
-    let interpreter = Interpreter()
-    let scanner = Scanner(source: source, runningIn: interpreter)
-    return scanner.scanTokens().first
+    let scanner = Scanner(source: source)
+    return try? scanner.scanTokens().first
   }
 }
