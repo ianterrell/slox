@@ -13,13 +13,13 @@ class ASTGenerator: BaseGenerator {
 
   func genAST(type: String, list: ASTList) -> String {
     let types = list.map { genType(type: type, name: $0.typeName, attributes: $0.attributes) }
-    let visitFuncs = list.map { "func visit(_ \(type.lowercased()): \($0.typeName)) -> Result" }
+    let visitFuncs = list.map { "func visit(_ \(type.lowercased()): \($0.typeName)) throws -> Result" }
 
     return """
     \(generatedCodeWarning)
 
     public protocol \(type): class {
-      @discardableResult func accept<T: \(type)Visitor>(visitor: T) -> T.Result
+      @discardableResult func accept<T: \(type)Visitor>(visitor: T) throws -> T.Result
     }
 
     public protocol \(type)Visitor {
@@ -47,8 +47,8 @@ class ASTGenerator: BaseGenerator {
       }
 
       @discardableResult
-      public func accept<T: \(type)Visitor>(visitor: T) -> T.Result {
-        return visitor.visit(self)
+      public func accept<T: \(type)Visitor>(visitor: T) throws -> T.Result {
+        return try visitor.visit(self)
       }
     }
     """

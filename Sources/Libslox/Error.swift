@@ -4,6 +4,8 @@ public protocol CompositeLoxError {
   var errors: [LoxError] { get }
 }
 
+// MARK:- Syntax Errors
+
 public enum SyntaxError: LoxError, SourceFindable, CustomStringConvertible {
   case unexpectedCharacter(location: String.Index)
   case unterminatedString(location: String.Index)
@@ -35,6 +37,39 @@ public enum SyntaxError: LoxError, SourceFindable, CustomStringConvertible {
     }
   }
 }
+
+// MARK:- Runtime Errors
+
+public enum RuntimeError: LoxError, SourceFindable, CustomStringConvertible {
+  case binaryOperatorRequiresNumeric(token: Token)
+  case binaryOperatorRequiresNumericOrString(token: Token)
+  case unaryOperatorRequiresNumeric(token: Token)
+  case internalError(token: Token, message: String)
+
+  public var description: String {
+    return "Runtime Error: \(subdescription)"
+  }
+
+  var subdescription: String {
+    switch self {
+    case .binaryOperatorRequiresNumeric(let t): return "Binary operator \(t.lexeme) requires numeric operands"
+    case .binaryOperatorRequiresNumericOrString(let t): return "Binary operator \(t.lexeme) requires both operands to be either numeric or string"
+    case .unaryOperatorRequiresNumeric(let t): return "Binary operator \(t.lexeme) requires numeric operand"
+    case .internalError(_, let message): return message
+    }
+  }
+
+  public var index: String.Index {
+    switch self {
+    case .binaryOperatorRequiresNumeric(let t): return t.location
+    case .binaryOperatorRequiresNumericOrString(let t): return t.location
+    case .unaryOperatorRequiresNumeric(let t): return t.location
+    case .internalError(let t, _): return t.location
+    }
+  }
+}
+
+// MARK:- Source Findable
 
 public protocol SourceFindable {
   var index: String.Index { get }

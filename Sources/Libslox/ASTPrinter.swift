@@ -2,7 +2,7 @@
 
 class ParenPrinter: ExprVisitor {
   func print(_ expr: Expr) -> String {
-    return expr.accept(visitor: self)
+    return try! expr.accept(visitor: self)
   }
 
   func visit(_ expr: Binary) -> String {
@@ -25,7 +25,7 @@ class ParenPrinter: ExprVisitor {
     var output = ""
     output += "(\(name)"
     for expr in exprs {
-      output += " \(expr.accept(visitor: self))"
+      output += " \(try! expr.accept(visitor: self))"
     }
     output += ")"
     return output
@@ -38,7 +38,7 @@ public class DotPrinter {
 
   public func print(_ expr: Expr) -> String {
     let printer = DotPrinterVisitor()
-    expr.accept(visitor: printer)
+    try! expr.accept(visitor: printer)
     return printer.finish()
   }
 }
@@ -63,14 +63,14 @@ class DotPrinterVisitor: ExprVisitor {
     graph += "  \(nodeName(for: expr)) [label=\"\(expr.op.lexeme)\"]\n"
     graph += "  \(nodeName(for: expr)) -> \(nodeName(for: expr.left))\n"
     graph += "  \(nodeName(for: expr)) -> \(nodeName(for: expr.right))\n\n"
-    expr.left.accept(visitor: self)
-    expr.right.accept(visitor: self)
+    try! expr.left.accept(visitor: self)
+    try! expr.right.accept(visitor: self)
   }
 
   func visit(_ expr: Grouping) {
     graph += "  \(nodeName(for: expr)) [label=\"( )\"]\n"
     graph += "  \(nodeName(for: expr)) -> \(nodeName(for: expr.expr))\n\n"
-    expr.expr.accept(visitor: self)
+    try! expr.expr.accept(visitor: self)
   }
 
   func visit(_ expr: Literal) {
@@ -80,6 +80,6 @@ class DotPrinterVisitor: ExprVisitor {
   func visit(_ expr: Unary) {
     graph += "  \(nodeName(for: expr)) [label=\"\(expr.op.lexeme)\"]\n"
     graph += "  \(nodeName(for: expr)) -> \(nodeName(for: expr.right))\n\n"
-    expr.right.accept(visitor: self)
+    try! expr.right.accept(visitor: self)
   }
 }

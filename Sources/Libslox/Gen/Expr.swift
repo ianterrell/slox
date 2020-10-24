@@ -3,16 +3,16 @@
 //
 
 public protocol Expr: class {
-  @discardableResult func accept<T: ExprVisitor>(visitor: T) -> T.Result
+  @discardableResult func accept<T: ExprVisitor>(visitor: T) throws -> T.Result
 }
 
 public protocol ExprVisitor {
   associatedtype Result
 
-  func visit(_ expr: Binary) -> Result
-  func visit(_ expr: Grouping) -> Result
-  func visit(_ expr: Literal) -> Result
-  func visit(_ expr: Unary) -> Result
+  func visit(_ expr: Binary) throws -> Result
+  func visit(_ expr: Grouping) throws -> Result
+  func visit(_ expr: Literal) throws -> Result
+  func visit(_ expr: Unary) throws -> Result
 }
 
 public class Binary: Expr {
@@ -27,8 +27,8 @@ public class Binary: Expr {
   }
 
   @discardableResult
-  public func accept<T: ExprVisitor>(visitor: T) -> T.Result {
-    return visitor.visit(self)
+  public func accept<T: ExprVisitor>(visitor: T) throws -> T.Result {
+    return try visitor.visit(self)
   }
 }
 
@@ -40,8 +40,8 @@ public class Grouping: Expr {
   }
 
   @discardableResult
-  public func accept<T: ExprVisitor>(visitor: T) -> T.Result {
-    return visitor.visit(self)
+  public func accept<T: ExprVisitor>(visitor: T) throws -> T.Result {
+    return try visitor.visit(self)
   }
 }
 
@@ -53,8 +53,8 @@ public class Literal: Expr {
   }
 
   @discardableResult
-  public func accept<T: ExprVisitor>(visitor: T) -> T.Result {
-    return visitor.visit(self)
+  public func accept<T: ExprVisitor>(visitor: T) throws -> T.Result {
+    return try visitor.visit(self)
   }
 }
 
@@ -68,7 +68,7 @@ public class Unary: Expr {
   }
 
   @discardableResult
-  public func accept<T: ExprVisitor>(visitor: T) -> T.Result {
-    return visitor.visit(self)
+  public func accept<T: ExprVisitor>(visitor: T) throws -> T.Result {
+    return try visitor.visit(self)
   }
 }

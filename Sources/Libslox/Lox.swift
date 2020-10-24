@@ -17,11 +17,11 @@ public class Lox {
     self.replPrompt = replPrompt
   }
 
-  public func run(_ script: String) throws {
+  public func run(_ script: String) throws -> Value {
     let tokens = try Scanner(source: script).scanTokens()
     let expr = try Parser(tokens: tokens).parse()
-    let output = ParenPrinter().print(expr)
-    print(output)
+    let value = try Interpreter().evaluate(expr)
+    return value
   }
 
   public func repl() {
@@ -29,7 +29,8 @@ public class Lox {
     prompt()
     while let line = readLine() {
       do {
-        try run(line)
+        let value = try run(line)
+        print(value)
       } catch {
         if let printer = ErrorPrinter(source: line, error: error) {
           printer.printAll()
