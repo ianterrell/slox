@@ -1,12 +1,3 @@
-//
-//  Error.swift
-//  Libslox
-//
-//  Created by Ian Terrell on 10/23/20.
-//
-
-import Foundation
-
 public protocol LoxError: Error {}
 
 public protocol CompositeLoxError {

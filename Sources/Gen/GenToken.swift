@@ -1,4 +1,4 @@
-class TokenGenerator {
+class TokenGenerator: BaseGenerator {
   struct Token {
     let name: String
     let literalType: String?
@@ -31,29 +31,31 @@ class TokenGenerator {
 
   func genTokens() -> String {
     return """
-    enum Token: CustomStringConvertible {
-    \(allCases(indent: 2, caseDef))
+    \(generatedCodeWarning)
+    
+    public enum Token: CustomStringConvertible {
+    \(indent(2, allCases(caseDef)))
 
       init?(location: String.Index, lexeme: String) {
         switch lexeme {
-    \(allKeywords(indent: 4, caseKeywordInit))
+    \(indent(4, allKeywords(caseKeywordInit)))
         default: return nil
         }
       }
 
-      var name: String {
+      public var name: String {
         switch self {
-    \(allCases(indent: 4, caseName))
+    \(indent(4, allCases(caseName)))
         }
       }
 
-      var lexeme: String {
+      public var lexeme: String {
         switch self {
-    \(allCases(indent: 4, caseLexeme))
+    \(indent(4, allCases(caseLexeme)))
         }
       }
 
-      var description: String {
+      public var description: String {
         if lexeme.isEmpty {
           return name
         }
@@ -64,7 +66,7 @@ class TokenGenerator {
   }
 
   func literalType(for t: String) -> String? {
-    return TokenGenerator.literalTypes[t]
+    return Self.literalTypes[t]
   }
 
   func caseDef(_ t: String) -> String {
@@ -93,18 +95,11 @@ class TokenGenerator {
     return "case \"\(t.lowercased())\": self = .\(t)(location: location, lexeme: lexeme)"
   }
 
-  func allKeywords(indent: Int, _ callback: (String) -> String) -> String {
-    return enumerate(cases: TokenGenerator.keywordNames, indent: indent, callback: callback)
+  func allKeywords(_ callback: (String) -> String) -> [String] {
+    return Self.keywordNames.map(callback)
   }
 
-  func allCases(indent: Int, _ callback: (String) -> String) -> String {
-    return enumerate(cases: TokenGenerator.tokenNames, indent: indent, callback: callback)
-  }
-
-  func enumerate(cases: [String], indent: Int, callback: (String) -> String) -> String {
-    let ws = String(repeating: " ", count: indent)
-    let cases = cases.map(callback)
-    let indented = cases.map{"\(ws)\($0)"}
-    return indented.joined(separator: "\n")
+  func allCases(_ callback: (String) -> String) -> [String] {
+    return Self.tokenNames.map(callback)
   }
 }

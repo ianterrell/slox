@@ -1,12 +1,3 @@
-//
-//  Scanner.swift
-//  Libslox
-//
-//  Created by Ian Terrell on 10/22/20.
-//
-
-import Foundation
-
 public struct ScanError: LoxError, CompositeLoxError {
   public enum Single: LoxError, SourceFindable, CustomStringConvertible {
     case unexpectedCharacter(location: String.Index)
