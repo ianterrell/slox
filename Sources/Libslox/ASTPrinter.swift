@@ -5,19 +5,19 @@ class ParenPrinter: ExprVisitor {
     return try! expr.accept(visitor: self)
   }
 
-  func visit(_ expr: Binary) -> String {
+  func visit(_ expr: BinaryExpr) -> String {
     return parenthesize(expr.op.lexeme, expr.left, expr.right)
   }
 
-  func visit(_ expr: Grouping) -> String {
+  func visit(_ expr: GroupingExpr) -> String {
     return parenthesize("group", expr.expr)
   }
 
-  func visit(_ expr: Literal) -> String {
+  func visit(_ expr: LiteralExpr) -> String {
     return "\(expr.value)"
   }
 
-  func visit(_ expr: Unary) -> String {
+  func visit(_ expr: UnaryExpr) -> String {
     return parenthesize(expr.op.lexeme, expr.right)
   }
 
@@ -33,10 +33,10 @@ class ParenPrinter: ExprVisitor {
 }
 
 // MARK:- DotPrinter
-public class DotPrinter {
-  public init() {}
+class DotPrinter {
+  init() {}
 
-  public func print(_ expr: Expr) -> String {
+  func print(_ expr: Expr) -> String {
     let printer = DotPrinterVisitor()
     try! expr.accept(visitor: printer)
     return printer.finish()
@@ -59,7 +59,7 @@ class DotPrinterVisitor: ExprVisitor {
     return "n\(abs(ObjectIdentifier(expr).hashValue))"
   }
 
-  func visit(_ expr: Binary) {
+  func visit(_ expr: BinaryExpr) {
     graph += "  \(nodeName(for: expr)) [label=\"\(expr.op.lexeme)\"]\n"
     graph += "  \(nodeName(for: expr)) -> \(nodeName(for: expr.left))\n"
     graph += "  \(nodeName(for: expr)) -> \(nodeName(for: expr.right))\n\n"
@@ -67,17 +67,17 @@ class DotPrinterVisitor: ExprVisitor {
     try! expr.right.accept(visitor: self)
   }
 
-  func visit(_ expr: Grouping) {
+  func visit(_ expr: GroupingExpr) {
     graph += "  \(nodeName(for: expr)) [label=\"( )\"]\n"
     graph += "  \(nodeName(for: expr)) -> \(nodeName(for: expr.expr))\n\n"
     try! expr.expr.accept(visitor: self)
   }
 
-  func visit(_ expr: Literal) {
+  func visit(_ expr: LiteralExpr) {
     graph += "  \(nodeName(for: expr)) [label=\"\(expr.value)\"]\n"
   }
 
-  func visit(_ expr: Unary) {
+  func visit(_ expr: UnaryExpr) {
     graph += "  \(nodeName(for: expr)) [label=\"\(expr.op.lexeme)\"]\n"
     graph += "  \(nodeName(for: expr)) -> \(nodeName(for: expr.right))\n\n"
     try! expr.right.accept(visitor: self)

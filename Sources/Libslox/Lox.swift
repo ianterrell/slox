@@ -1,5 +1,3 @@
-import Foundation
-
 public enum SystemError: LoxError {
   case couldNotReadFile(_ path: String)
 
@@ -17,11 +15,10 @@ public class Lox {
     self.replPrompt = replPrompt
   }
 
-  public func run(_ script: String) throws -> Value {
+  public func run(_ script: String) throws {
     let tokens = try Scanner(source: script).scanTokens()
-    let expr = try Parser(tokens: tokens).parse()
-    let value = try Interpreter().evaluate(expr)
-    return value
+    let program = try Parser(tokens: tokens).parse()
+    try Interpreter().interpret(program)
   }
 
   public func repl() {
@@ -29,8 +26,7 @@ public class Lox {
     prompt()
     while let line = readLine() {
       do {
-        let value = try run(line)
-        print(value)
+        try run(line)
       } catch {
         if let printer = ErrorPrinter(source: line, error: error) {
           printer.printAll()

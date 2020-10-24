@@ -2,73 +2,73 @@
 // THIS IS A GENERATED FILE DO NOT EDIT
 //
 
-public protocol Expr: class {
-  @discardableResult func accept<T: ExprVisitor>(visitor: T) throws -> T.Result
+protocol Expr: class {
+  @discardableResult func accept<T: ExprVisitor>(visitor: T) throws -> T.ExprResult
 }
 
-public protocol ExprVisitor {
-  associatedtype Result
+protocol ExprVisitor {
+  associatedtype ExprResult
 
-  func visit(_ expr: Binary) throws -> Result
-  func visit(_ expr: Grouping) throws -> Result
-  func visit(_ expr: Literal) throws -> Result
-  func visit(_ expr: Unary) throws -> Result
+  func visit(_ expr: BinaryExpr) throws -> ExprResult
+  func visit(_ expr: GroupingExpr) throws -> ExprResult
+  func visit(_ expr: LiteralExpr) throws -> ExprResult
+  func visit(_ expr: UnaryExpr) throws -> ExprResult
 }
 
-public class Binary: Expr {
+class BinaryExpr: Expr {
   let left: Expr
   let op: Token
   let right: Expr
 
-  public init(left: Expr, op: Token, right: Expr) {
+  init(left: Expr, op: Token, right: Expr) {
     self.left = left
     self.op = op
     self.right = right
   }
 
   @discardableResult
-  public func accept<T: ExprVisitor>(visitor: T) throws -> T.Result {
+  func accept<T: ExprVisitor>(visitor: T) throws -> T.ExprResult {
     return try visitor.visit(self)
   }
 }
 
-public class Grouping: Expr {
+class GroupingExpr: Expr {
   let expr: Expr
 
-  public init(expr: Expr) {
+  init(expr: Expr) {
     self.expr = expr
   }
 
   @discardableResult
-  public func accept<T: ExprVisitor>(visitor: T) throws -> T.Result {
+  func accept<T: ExprVisitor>(visitor: T) throws -> T.ExprResult {
     return try visitor.visit(self)
   }
 }
 
-public class Literal: Expr {
+class LiteralExpr: Expr {
   let value: Value
 
-  public init(value: Value) {
+  init(value: Value) {
     self.value = value
   }
 
   @discardableResult
-  public func accept<T: ExprVisitor>(visitor: T) throws -> T.Result {
+  func accept<T: ExprVisitor>(visitor: T) throws -> T.ExprResult {
     return try visitor.visit(self)
   }
 }
 
-public class Unary: Expr {
+class UnaryExpr: Expr {
   let op: Token
   let right: Expr
 
-  public init(op: Token, right: Expr) {
+  init(op: Token, right: Expr) {
     self.op = op
     self.right = right
   }
 
   @discardableResult
-  public func accept<T: ExprVisitor>(visitor: T) throws -> T.Result {
+  func accept<T: ExprVisitor>(visitor: T) throws -> T.ExprResult {
     return try visitor.visit(self)
   }
 }

@@ -10,8 +10,9 @@ public enum SyntaxError: LoxError, SourceFindable, CustomStringConvertible {
   case unexpectedCharacter(location: String.Index)
   case unterminatedString(location: String.Index)
   case notANumber(location: String.Index)
-  case missingParen(token: Token)
-  case missingExpression(token: Token)
+  case missingParen(location: String.Index)
+  case missingExpression(location: String.Index)
+  case missingSemicolon(location: String.Index)
 
   public var description: String {
     return "Syntax Error: \(subdescription)"
@@ -24,6 +25,7 @@ public enum SyntaxError: LoxError, SourceFindable, CustomStringConvertible {
     case .notANumber: return "Not a number"
     case .missingParen: return "Expect ')' after expression"
     case .missingExpression: return "Expect expression"
+    case .missingSemicolon: return "Expect semicolon after statement"
     }
   }
 
@@ -32,8 +34,9 @@ public enum SyntaxError: LoxError, SourceFindable, CustomStringConvertible {
     case .unexpectedCharacter(let i): return i
     case .unterminatedString(let i): return i
     case .notANumber(let i): return i
-    case .missingParen(let t): return t.location
-    case .missingExpression(let t): return t.location
+    case .missingParen(let i): return i
+    case .missingExpression(let i): return i
+    case .missingSemicolon(let i): return i
     }
   }
 }
@@ -41,10 +44,10 @@ public enum SyntaxError: LoxError, SourceFindable, CustomStringConvertible {
 // MARK:- Runtime Errors
 
 public enum RuntimeError: LoxError, SourceFindable, CustomStringConvertible {
-  case binaryOperatorRequiresNumeric(token: Token)
-  case binaryOperatorRequiresNumericOrString(token: Token)
-  case unaryOperatorRequiresNumeric(token: Token)
-  case internalError(token: Token, message: String)
+  case binaryOperatorRequiresNumeric(op: String, location: String.Index)
+  case binaryOperatorRequiresNumericOrString(op: String, location: String.Index)
+  case unaryOperatorRequiresNumeric(op: String, location: String.Index)
+  case internalError(location: String.Index, message: String)
 
   public var description: String {
     return "Runtime Error: \(subdescription)"
@@ -52,34 +55,34 @@ public enum RuntimeError: LoxError, SourceFindable, CustomStringConvertible {
 
   var subdescription: String {
     switch self {
-    case .binaryOperatorRequiresNumeric(let t): return "Binary operator \(t.lexeme) requires numeric operands"
-    case .binaryOperatorRequiresNumericOrString(let t): return "Binary operator \(t.lexeme) requires both operands to be either numeric or string"
-    case .unaryOperatorRequiresNumeric(let t): return "Binary operator \(t.lexeme) requires numeric operand"
+    case .binaryOperatorRequiresNumeric(let op, _): return "Binary operator \(op) requires numeric operands"
+    case .binaryOperatorRequiresNumericOrString(let op, _): return "Binary operator \(op) requires both operands to be either numeric or string"
+    case .unaryOperatorRequiresNumeric(let op, _): return "Binary operator \(op) requires numeric operand"
     case .internalError(_, let message): return message
     }
   }
 
   public var index: String.Index {
     switch self {
-    case .binaryOperatorRequiresNumeric(let t): return t.location
-    case .binaryOperatorRequiresNumericOrString(let t): return t.location
-    case .unaryOperatorRequiresNumeric(let t): return t.location
-    case .internalError(let t, _): return t.location
+    case .binaryOperatorRequiresNumeric(_, let i): return i
+    case .binaryOperatorRequiresNumericOrString(_, let i): return i
+    case .unaryOperatorRequiresNumeric(_, let i): return i
+    case .internalError(let i, _): return i
     }
   }
 }
 
 // MARK:- Source Findable
 
-public protocol SourceFindable {
+protocol SourceFindable {
   var index: String.Index { get }
 }
 
-public class SourceFinder {
+class SourceFinder {
   let source: String
   let lines: [Substring]
 
-  public init?(source: String) {
+  init?(source: String) {
     guard !source.isEmpty else {
       return nil
     }
@@ -87,7 +90,7 @@ public class SourceFinder {
     self.lines = source.split(separator: "\n", omittingEmptySubsequences: false)
   }
 
-  public func find(index: String.Index) -> (line: String, lineNumber: Int, columnNumber: Int)? {
+  func find(index: String.Index) -> (line: String, lineNumber: Int, columnNumber: Int)? {
     guard index < source.endIndex else {
       return nil
     }

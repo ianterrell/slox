@@ -6,8 +6,12 @@ class Parser {
     self.tokens = tokens
   }
 
-  func parse() throws -> Expr {
-    return try expression()
+  func parse() throws -> [Stmt] {
+    var statements: [Stmt] = []
+    while !isAtEnd {
+      statements.append(try statement())
+    }
+    return statements
   }
 
   // MARK:- Helpers
@@ -51,11 +55,12 @@ class Parser {
     return false
   }
 
-  func consume(_ type: Token.`Type`) -> Token? {
+  func consume(_ type: Token.`Type`) -> Bool {
     if check(type) {
-      return advance()
+      advance()
+      return true
     }
-    return nil
+    return false
   }
 
   func synchronize() {
@@ -70,7 +75,32 @@ class Parser {
     }
   }
 
-  // MARK:- Parsing
+  // MARK:- Parsing Statements
+
+  func statement() throws -> Stmt {
+    if match(.PRINT) {
+      return try printStatement()
+    }
+    return try expressionStatement()
+  }
+
+  func printStatement() throws -> Stmt {
+    let expr = try expression()
+    guard consume(.SEMICOLON) else {
+      throw SyntaxError.missingSemicolon(location: peek().location)
+    }
+    return PrintStmt(expr: expr)
+  }
+
+  func expressionStatement() throws -> Stmt {
+    let expr = try expression()
+    guard consume(.SEMICOLON) else {
+      throw SyntaxError.missingSemicolon(location: peek().location)
+    }
+    return ExpressionStmt(expr: expr)
+  }
+
+  // MARK:- Parsing Expressions
 
   func expression() throws -> Expr {
     return try equality()
@@ -81,7 +111,7 @@ class Parser {
     while match(.BANG_EQUAL, .EQUAL_EQUAL) {
       let op = previous()
       let right = try comparison()
-      expr = Binary(left: expr, op: op, right: right)
+      expr = BinaryExpr(left: expr, op: op, right: right)
     }
     return expr
   }
@@ -91,7 +121,7 @@ class Parser {
     while match(.GREATER, .GREATER_EQUAL, .LESS, .LESS_EQUAL) {
       let op = previous()
       let right =  try term()
-      expr = Binary(left: expr, op: op, right: right)
+      expr = BinaryExpr(left: expr, op: op, right: right)
     }
     return expr
   }
@@ -101,7 +131,7 @@ class Parser {
     while match(.MINUS, .PLUS) {
       let op = previous()
       let right =  try factor()
-      expr = Binary(left: expr, op: op, right: right)
+      expr = BinaryExpr(left: expr, op: op, right: right)
     }
     return expr
   }
@@ -111,7 +141,7 @@ class Parser {
     while match(.SLASH, .STAR) {
       let op = previous()
       let right =  try unary()
-      expr = Binary(left: expr, op: op, right: right)
+      expr = BinaryExpr(left: expr, op: op, right: right)
     }
     return expr
   }
@@ -120,7 +150,7 @@ class Parser {
     if match(.BANG, .MINUS) {
       let op = previous()
       let right =  try unary()
-      return Unary(op: op, right: right)
+      return UnaryExpr(op: op, right: right)
     }
 
     return  try primary()
@@ -128,27 +158,27 @@ class Parser {
 
   func primary() throws -> Expr {
     if match(.FALSE) {
-      return Literal(value: .boolean(false))
+      return LiteralExpr(value: .boolean(false))
     }
     if match(.TRUE) {
-      return Literal(value: .boolean(true))
+      return LiteralExpr(value: .boolean(true))
     }
     if match(.NIL) {
-      return Literal(value: .nil)
+      return LiteralExpr(value: .nil)
     }
     if match(.NUMBER), case .NUMBER(_, _, let n) = previous() {
-      return Literal(value: .number(n))
+      return LiteralExpr(value: .number(n))
     }
     if match(.STRING), case .STRING(_, _, let s) = previous() {
-      return Literal(value: .string(s))
+      return LiteralExpr(value: .string(s))
     }
     if match(.LEFT_PAREN) {
       let expr =  try expression()
-      guard let _ = consume(.RIGHT_PAREN) else {
-        throw SyntaxError.missingParen(token: peek())
+      guard consume(.RIGHT_PAREN) else {
+        throw SyntaxError.missingParen(location: peek().location)
       }
-      return Grouping(expr: expr)
+      return GroupingExpr(expr: expr)
     }
-    throw SyntaxError.missingExpression(token: peek())
+    throw SyntaxError.missingExpression(location: peek().location)
   }
 }

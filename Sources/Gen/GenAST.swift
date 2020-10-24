@@ -2,14 +2,20 @@ class ASTGenerator: BaseGenerator {
   typealias Attribute = (name: String, type: String)
   typealias ASTList = [(typeName: String, attributes: [Attribute])]
 
+  static let statements: ASTList = [
+    ("ExpressionStmt", [("expr", "Expr")]),
+    ("PrintStmt", [("expr", "Expr")]),
+  ]
+
   static let expressions: ASTList = [
-    ("Binary", [("left", "Expr"), ("op", "Token"), ("right", "Expr")]),
-    ("Grouping", [("expr", "Expr")]),
-    ("Literal", [("value", "Value")]),
-    ("Unary", [("op", "Token"), ("right", "Expr")]),
+    ("BinaryExpr", [("left", "Expr"), ("op", "Token"), ("right", "Expr")]),
+    ("GroupingExpr", [("expr", "Expr")]),
+    ("LiteralExpr", [("value", "Value")]),
+    ("UnaryExpr", [("op", "Token"), ("right", "Expr")]),
   ]
 
   func genExpr() -> String { return genAST(type: "Expr", list: Self.expressions) }
+  func genStmt() -> String { return genAST(type: "Stmt", list: Self.statements) }
 
   func genAST(type: String, list: ASTList) -> String {
     let types = list.map { genType(type: type, name: $0.typeName, attributes: $0.attributes) }
@@ -18,11 +24,11 @@ class ASTGenerator: BaseGenerator {
     return """
     \(generatedCodeWarning)
 
-    public protocol \(type): class {
+    protocol \(type): class {
       @discardableResult func accept<T: \(type)Visitor>(visitor: T) throws -> T.Result
     }
 
-    public protocol \(type)Visitor {
+    protocol \(type)Visitor {
       associatedtype Result
 
     \(indent(2, visitFuncs))
@@ -39,15 +45,15 @@ class ASTGenerator: BaseGenerator {
     let assignments = attributes.map { "self.\($0.name) = \($0.name)" }
 
     return """
-    public class \(name): \(type) {
+    class \(name): \(type) {
     \(indent(2, declarations))
 
-      public init(\(params.joined(separator: ", "))) {
+      init(\(params.joined(separator: ", "))) {
     \(indent(4, assignments))
       }
 
       @discardableResult
-      public func accept<T: \(type)Visitor>(visitor: T) throws -> T.Result {
+      func accept<T: \(type)Visitor>(visitor: T) throws -> T.Result {
         return try visitor.visit(self)
       }
     }

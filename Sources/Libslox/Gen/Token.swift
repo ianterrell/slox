@@ -2,7 +2,7 @@
 // THIS IS A GENERATED FILE DO NOT EDIT
 //
 
-public enum Token: CustomStringConvertible {
+enum Token: CustomStringConvertible {
   case AND(location: String.Index, lexeme: String)
   case BANG(location: String.Index, lexeme: String)
   case BANG_EQUAL(location: String.Index, lexeme: String)
@@ -65,7 +65,7 @@ public enum Token: CustomStringConvertible {
     }
   }
 
-  public var name: String {
+  var name: String {
     switch self {
     case .AND: return "AND"
     case .BANG: return "BANG"
@@ -109,7 +109,7 @@ public enum Token: CustomStringConvertible {
     }
   }
 
-  public var location: String.Index {
+  var location: String.Index {
     switch self {
     case .AND(let location, _): return location
     case .BANG(let location, _): return location
@@ -153,7 +153,7 @@ public enum Token: CustomStringConvertible {
     }
   }
 
-  public var lexeme: String {
+  var lexeme: String {
     switch self {
     case .AND(_, let lexeme): return lexeme
     case .BANG(_, let lexeme): return lexeme
@@ -241,7 +241,7 @@ public enum Token: CustomStringConvertible {
     }
   }
 
-  public var description: String {
+  var description: String {
     if lexeme.isEmpty {
       return name
     }

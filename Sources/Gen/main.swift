@@ -12,5 +12,6 @@ func write(_ contents: String, to name: String) {
 }
 
 write(TokenGenerator().genTokens(), to: "Token.swift")
+write(ASTGenerator().genStmt(), to: "Stmt.swift")
 write(ASTGenerator().genExpr(), to: "Expr.swift")
 print("Done!")

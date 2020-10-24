@@ -1,4 +1,4 @@
-import Darwin
+import Foundation
 import Libslox
 
 extension Int32 {
@@ -31,8 +31,7 @@ func read(fileAt path: String) -> String {
 let path = args.last!
 let script = read(fileAt: path)
 do {
-  let value = try lox.run(script)
-  print(value)
+  try lox.run(script)
 } catch let error as LoxError {
   if let printer = ErrorPrinter(source: script, error: error) {
     printer.printAll()

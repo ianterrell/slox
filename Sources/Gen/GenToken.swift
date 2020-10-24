@@ -33,7 +33,7 @@ class TokenGenerator: BaseGenerator {
     return """
     \(generatedCodeWarning)
 
-    public enum Token: CustomStringConvertible {
+    enum Token: CustomStringConvertible {
     \(indent(2, allCases(caseDef)))
 
       init?(location: String.Index, lexeme: String) {
@@ -43,19 +43,19 @@ class TokenGenerator: BaseGenerator {
         }
       }
 
-      public var name: String {
+      var name: String {
         switch self {
     \(indent(4, allCases(caseName)))
         }
       }
 
-      public var location: String.Index {
+      var location: String.Index {
         switch self {
     \(indent(4, allCases(caseLocation)))
         }
       }
 
-      public var lexeme: String {
+      var lexeme: String {
         switch self {
     \(indent(4, allCases(caseLexeme)))
         }
@@ -67,7 +67,7 @@ class TokenGenerator: BaseGenerator {
         }
       }
 
-      public var description: String {
+      var description: String {
         if lexeme.isEmpty {
           return name
         }
