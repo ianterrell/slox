@@ -18,9 +18,10 @@ public class Lox {
   }
 
   public func run(_ script: String) throws {
-    let scanner = Scanner(source: script)
-    let tokens = try scanner.scanTokens()
-    print(tokens)
+    let tokens = try Scanner(source: script).scanTokens()
+    let expr = try Parser(tokens: tokens).parse()
+    let output = ParenPrinter().print(expr)
+    print(output)
   }
 
   public func repl() {

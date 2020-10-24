@@ -4,6 +4,38 @@ public protocol CompositeLoxError {
   var errors: [LoxError] { get }
 }
 
+public enum SyntaxError: LoxError, SourceFindable, CustomStringConvertible {
+  case unexpectedCharacter(location: String.Index)
+  case unterminatedString(location: String.Index)
+  case notANumber(location: String.Index)
+  case missingParen(token: Token)
+  case missingExpression(token: Token)
+
+  public var description: String {
+    return "Syntax Error: \(subdescription)"
+  }
+
+  var subdescription: String {
+    switch self {
+    case .unexpectedCharacter: return "Unexpected character"
+    case .unterminatedString: return "Unterminated string"
+    case .notANumber: return "Not a number"
+    case .missingParen: return "Expect ')' after expression"
+    case .missingExpression: return "Expect expression"
+    }
+  }
+
+  public var index: String.Index {
+    switch self {
+    case .unexpectedCharacter(let i): return i
+    case .unterminatedString(let i): return i
+    case .notANumber(let i): return i
+    case .missingParen(let t): return t.location
+    case .missingExpression(let t): return t.location
+    }
+  }
+}
+
 public protocol SourceFindable {
   var index: String.Index { get }
 }

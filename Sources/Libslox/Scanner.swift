@@ -1,26 +1,4 @@
 public struct ScanError: LoxError, CompositeLoxError {
-  public enum Single: LoxError, SourceFindable, CustomStringConvertible {
-    case unexpectedCharacter(location: String.Index)
-    case unterminatedString(location: String.Index)
-    case notANumber(location: String.Index)
-
-    public var description: String {
-      switch self {
-      case .unexpectedCharacter: return "Unexpected character"
-      case .unterminatedString: return "Unterminated string"
-      case .notANumber: return "Not a number"
-      }
-    }
-
-    public var index: String.Index {
-      switch self {
-      case .unexpectedCharacter(let i): return i
-      case .unterminatedString(let i): return i
-      case .notANumber(let i): return i
-      }
-    }
-  }
-
   public let errors: [LoxError]
 }
 
@@ -40,14 +18,14 @@ class Scanner {
 
   func scanTokens() throws -> [Token] {
     var tokens: [Token] = []
-    var errors: [ScanError.Single] = []
+    var errors: [SyntaxError] = []
     while !isAtEnd {
       start = current
       do {
         if let token = try scanToken() {
           tokens.append(token)
         }
-      } catch let error as ScanError.Single {
+      } catch let error as SyntaxError {
         errors.append(error)
       } catch {
         fatalError("Unexpected error: \(error)")
@@ -102,7 +80,7 @@ class Scanner {
       if isAlpha(c) {
         return identifier()
       }
-      throw ScanError.Single.unexpectedCharacter(location: start)
+      throw SyntaxError.unexpectedCharacter(location: start)
     }
 
     return nil // noop on full advancing
@@ -157,7 +135,7 @@ class Scanner {
     }
 
     guard !isAtEnd else {
-      throw ScanError.Single.unterminatedString(location: start)
+      throw SyntaxError.unterminatedString(location: start)
     }
 
     advance() // Consume the closing "
@@ -174,7 +152,7 @@ class Scanner {
     }
 
     guard let value = Double(currentLexeme) else {
-      throw ScanError.Single.notANumber(location: start)
+      throw SyntaxError.notANumber(location: start)
     }
     return .NUMBER(location: start, lexeme: currentLexeme, value: value)
   }

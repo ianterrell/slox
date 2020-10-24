@@ -1,7 +1,42 @@
+//MARK:- ParenPrinter
+
+class ParenPrinter: ExprVisitor {
+  func print(_ expr: Expr) -> String {
+    return expr.accept(visitor: self)
+  }
+
+  func visit(_ expr: Binary) -> String {
+    return parenthesize(expr.op.lexeme, expr.left, expr.right)
+  }
+
+  func visit(_ expr: Grouping) -> String {
+    return parenthesize("group", expr.expr)
+  }
+
+  func visit(_ expr: Literal) -> String {
+    return "\(expr.value)"
+  }
+
+  func visit(_ expr: Unary) -> String {
+    return parenthesize(expr.op.lexeme, expr.right)
+  }
+
+  private func parenthesize(_ name: String, _ exprs: Expr...) -> String {
+    var output = ""
+    output += "(\(name)"
+    for expr in exprs {
+      output += " \(expr.accept(visitor: self))"
+    }
+    output += ")"
+    return output
+  }
+}
+
+// MARK:- DotPrinter
 public class DotPrinter {
   public init() {}
 
-  public func genDot(_ expr: Expr) -> String {
+  public func print(_ expr: Expr) -> String {
     let printer = DotPrinterVisitor()
     expr.accept(visitor: printer)
     return printer.finish()

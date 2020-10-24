@@ -49,9 +49,21 @@ class TokenGenerator: BaseGenerator {
         }
       }
 
+      public var location: String.Index {
+        switch self {
+    \(indent(4, allCases(caseLocation)))
+        }
+      }
+
       public var lexeme: String {
         switch self {
     \(indent(4, allCases(caseLexeme)))
+        }
+      }
+
+      var type: `Type` {
+        switch self {
+    \(indent(4, allCases(caseType)))
         }
       }
 
@@ -60,6 +72,12 @@ class TokenGenerator: BaseGenerator {
           return name
         }
         return "\\(name) \\(lexeme)"
+      }
+    }
+
+    extension Token {
+      enum `Type` {
+        case \(allCases({ $0 }).joined(separator: ", "))
       }
     }
     """
@@ -82,6 +100,15 @@ class TokenGenerator: BaseGenerator {
     return "case .\(t): return \"\(t)\""
   }
 
+  func caseLocation(_ t: String) -> String {
+    var output = "case .\(t)(let location, _"
+    if literalType(for: t) != nil {
+      output += ", _"
+    }
+    output += "): return location"
+    return output
+  }
+
   func caseLexeme(_ t: String) -> String {
     var output = "case .\(t)(_, let lexeme"
     if literalType(for: t) != nil {
@@ -89,6 +116,10 @@ class TokenGenerator: BaseGenerator {
     }
     output += "): return lexeme"
     return output
+  }
+
+  func caseType(_ t: String) -> String {
+    return "case .\(t): return .\(t)"
   }
 
   func caseKeywordInit(_ t: String) -> String {
