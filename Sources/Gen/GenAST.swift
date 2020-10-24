@@ -10,7 +10,7 @@ class ASTGenerator: BaseGenerator {
   ]
 
   func genExpr() -> String { return genAST(type: "Expr", list: Self.expressions) }
-  
+
   func genAST(type: String, list: ASTList) -> String {
     let types = list.map { genType(type: type, name: $0.typeName, attributes: $0.attributes) }
     let visitFuncs = list.map { "func visit(_ \(type.lowercased()): \($0.typeName)) -> Result" }
@@ -29,6 +29,7 @@ class ASTGenerator: BaseGenerator {
     }
 
     \(types.joined(separator: "\n\n"))
+
     """
   }
 
@@ -45,7 +46,7 @@ class ASTGenerator: BaseGenerator {
     \(indent(4, assignments))
       }
 
-      @discardableResult 
+      @discardableResult
       public func accept<T: \(type)Visitor>(visitor: T) -> T.Result {
         return visitor.visit(self)
       }

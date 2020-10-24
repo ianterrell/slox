@@ -26,7 +26,7 @@ public class Binary: Expr {
     self.right = right
   }
 
-  @discardableResult 
+  @discardableResult
   public func accept<T: ExprVisitor>(visitor: T) -> T.Result {
     return visitor.visit(self)
   }
@@ -39,7 +39,7 @@ public class Grouping: Expr {
     self.expr = expr
   }
 
-  @discardableResult 
+  @discardableResult
   public func accept<T: ExprVisitor>(visitor: T) -> T.Result {
     return visitor.visit(self)
   }
@@ -52,7 +52,7 @@ public class Literal: Expr {
     self.value = value
   }
 
-  @discardableResult 
+  @discardableResult
   public func accept<T: ExprVisitor>(visitor: T) -> T.Result {
     return visitor.visit(self)
   }
@@ -67,7 +67,7 @@ public class Unary: Expr {
     self.right = right
   }
 
-  @discardableResult 
+  @discardableResult
   public func accept<T: ExprVisitor>(visitor: T) -> T.Result {
     return visitor.visit(self)
   }

@@ -32,7 +32,7 @@ class TokenGenerator: BaseGenerator {
   func genTokens() -> String {
     return """
     \(generatedCodeWarning)
-    
+
     public enum Token: CustomStringConvertible {
     \(indent(2, allCases(caseDef)))
 
@@ -80,6 +80,7 @@ class TokenGenerator: BaseGenerator {
         case \(allCases({ $0 }).joined(separator: ", "))
       }
     }
+    
     """
   }
 
