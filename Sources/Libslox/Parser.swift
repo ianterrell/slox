@@ -114,6 +114,7 @@ class Parser {
     if match(.IF) { return try ifStatement() }
     if match(.PRINT) { return try printStatement() }
     if match(.WHILE) { return try whileStatement() }
+    if match(.FOR) { return try forStatement() }
     if match(.LEFT_BRACE) { return try blockStatement() }
     return try expressionStatement()
   }
@@ -149,6 +150,44 @@ class Parser {
     }
     let body = try statement()
     return WhileStmt(condition: condition, body: body)
+  }
+
+  func forStatement() throws -> Stmt {
+    guard consume(.LEFT_PAREN) else {
+      throw SyntaxError.missingLeftParen(location: previous().location)
+    }
+
+    var initializer: Stmt?
+    if !match(.SEMICOLON) {
+      initializer = match(.VAR) ? try varDeclaration() : try expressionStatement()
+    }
+
+    var condition: Expr = LiteralExpr(value: .boolean(true))
+    if !match(.SEMICOLON) {
+      condition = try expression()
+      guard consume(.SEMICOLON) else {
+        throw SyntaxError.missingSemicolon(location: previous().location)
+      }
+    }
+
+    var increment: Expr?
+    if !check(.RIGHT_PAREN) {
+      increment = try expression()
+    }
+
+    guard consume(.RIGHT_PAREN) else {
+      throw SyntaxError.missingRightParen(location: previous().location)
+    }
+
+    var body = try statement()
+    if let increment = increment {
+      body = BlockStmt(statements: [body, ExpressionStmt(expr: increment)])
+    }
+    var stmt: Stmt = WhileStmt(condition: condition, body: body)
+    if let initializer = initializer {
+      stmt = BlockStmt(statements: [initializer, stmt])
+    }
+    return stmt
   }
 
   func blockStatement() throws -> Stmt {
