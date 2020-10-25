@@ -87,6 +87,10 @@ class Parser {
 
   // MARK:- Parsing Statements
 
+  func program() throws -> Stmt {
+    return try declaration()
+  }
+
   func declaration() throws -> Stmt {
     if match(.VAR) {
       return try varDeclaration()
@@ -166,7 +170,7 @@ class Parser {
   }
 
   func assignment() throws -> Expr {
-    let expr = try equality()
+    let expr = try logicalOr()
     if match(.EQUAL) {
       let equals = previous()
       let value = try assignment()
@@ -174,6 +178,26 @@ class Parser {
         return AssignExpr(name: varExpr.name, value: value)
       }
       throw SyntaxError.invalidAssignmentTarget(location: equals.location)
+    }
+    return expr
+  }
+
+  func logicalOr() throws -> Expr {
+    var expr = try logicalAnd()
+    while match(.OR) {
+      let op = previous()
+      let right = try logicalAnd()
+      expr = LogicalExpr(left: expr, op: op, right: right)
+    }
+    return expr
+  }
+
+  func logicalAnd() throws -> Expr {
+    var expr = try equality()
+    while match(.AND) {
+      let op = previous()
+      let right = try equality()
+      expr = LogicalExpr(left: expr, op: op, right: right)
     }
     return expr
   }

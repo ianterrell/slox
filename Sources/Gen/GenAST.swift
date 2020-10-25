@@ -15,6 +15,7 @@ class ASTGenerator: BaseGenerator {
     ("BinaryExpr", [("left", "Expr"), ("op", "Token"), ("right", "Expr")]),
     ("GroupingExpr", [("expr", "Expr")]),
     ("LiteralExpr", [("value", "Value")]),
+    ("LogicalExpr", [("left", "Expr"), ("op", "Token"), ("right", "Expr")]),
     ("UnaryExpr", [("op", "Token"), ("right", "Expr")]),
     ("VariableExpr", [("name", "Token")]),
   ]

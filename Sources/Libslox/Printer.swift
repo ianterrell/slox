@@ -107,6 +107,14 @@ class DotPrinterVisitor: StmtVisitor, ExprVisitor {
     print("\(nodeName(for: expr)) [label=\"\(expr.name.lexeme)\"]")
   }
 
+  func visit(_ expr: LogicalExpr) throws {
+    print("\(nodeName(for: expr)) [label=\"\(expr.op.lexeme)\" shape=circle]")
+    print("\(nodeName(for: expr)) -> \(nodeName(for: expr.left))")
+    print("\(nodeName(for: expr)) -> \(nodeName(for: expr.right))")
+    try! expr.left.accept(visitor: self)
+    try! expr.right.accept(visitor: self)
+  }
+
   func visit(_ expr: UnaryExpr) {
     print("\(nodeName(for: expr)) [label=\"\(expr.op.lexeme)\" shape=circle]")
     print("\(nodeName(for: expr)) -> \(nodeName(for: expr.right))")

@@ -102,6 +102,16 @@ class Interpreter: StmtVisitor, ExprVisitor {
     return expr.value
   }
 
+  func visit(_ expr: LogicalExpr) throws -> Value {
+    let left = try evaluate(expr.left)
+    switch expr.op {
+    case .OR: return isTruthy(left) ? left : try evaluate(expr.right)
+    case .AND: return !isTruthy(left) ? left : try evaluate(expr.right)
+    default:
+      throw RuntimeError.internalError(location: expr.op.location, message: "Invalid operator for logical expression; should not have parsed")
+    }
+  }
+
   func visit(_ expr: UnaryExpr) throws -> Value {
     let right = try evaluate(expr.right)
     switch (expr.op, right) {
