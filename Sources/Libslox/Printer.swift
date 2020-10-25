@@ -27,21 +27,28 @@ class DotPrinterVisitor: StmtVisitor, ExprVisitor {
     return "n\(abs(ObjectIdentifier(node).hashValue))"
   }
 
-  func visit(_ stmt: ExpressionStmt) throws {
+  func visit(_ stmt: ExpressionStmt) {
     print("  subgraph cluster_\(nodeName(for: stmt)) {")
     print("    label=\"Expression\"\n")
     try! stmt.expr.accept(visitor: self)
     print("  }")
   }
 
-  func visit(_ stmt: PrintStmt) throws {
+  func visit(_ stmt: PrintStmt) {
     print("  subgraph cluster_\(nodeName(for: stmt)) {")
     print("    label=\"Print\"\n")
     try! stmt.expr.accept(visitor: self)
     print("  }")
   }
 
-  func visit(_ stmt: VarStmt) throws {
+  func visit(_ stmt: BlockStmt) {
+    print("  subgraph cluster_\(nodeName(for: stmt)) {")
+    print("    label=\"Block\"\n")
+    stmt.statements.forEach { try! $0.accept(visitor: self) }
+    print("  }")
+  }
+
+  func visit(_ stmt: VarStmt) {
     print("  subgraph cluster_\(nodeName(for: stmt)) {")
     print("    label=\"var \(stmt.name.lexeme) =\"\n")
     if let initializer = stmt.initializer {
@@ -50,6 +57,12 @@ class DotPrinterVisitor: StmtVisitor, ExprVisitor {
       print("    \(nodeName(for: stmt)) [label=\"nil\"]")
     }
     print("  }")
+  }
+
+  func visit(_ expr: AssignExpr) {
+    print("    \(nodeName(for: expr)) [label=\"Assign \(expr.name.lexeme)\"]")
+    print("    \(nodeName(for: expr)) -> \(nodeName(for: expr.value))")
+    try! expr.value.accept(visitor: self)
   }
 
   func visit(_ expr: BinaryExpr) {

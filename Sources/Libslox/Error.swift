@@ -14,6 +14,8 @@ public enum SyntaxError: LoxError, SourceFindable, CustomStringConvertible {
   case missingExpression(location: String.Index)
   case missingSemicolon(location: String.Index)
   case missingIdentifier(location: String.Index)
+  case invalidAssignmentTarget(location: String.Index)
+  case missingBrace(location: String.Index)
 
   public var description: String {
     return "Syntax Error: \(subdescription)"
@@ -28,6 +30,8 @@ public enum SyntaxError: LoxError, SourceFindable, CustomStringConvertible {
     case .missingExpression: return "Expect expression"
     case .missingSemicolon: return "Expect semicolon after statement"
     case .missingIdentifier: return "Expect identifier"
+    case .invalidAssignmentTarget: return "Invalid assignment target"
+    case .missingBrace: return "Expect '}' after block"
     }
   }
 
@@ -40,6 +44,8 @@ public enum SyntaxError: LoxError, SourceFindable, CustomStringConvertible {
     case .missingExpression(let i): return i
     case .missingSemicolon(let i): return i
     case .missingIdentifier(let i): return i
+    case .invalidAssignmentTarget(let i): return i
+    case .missingBrace(let i): return i
     }
   }
 }

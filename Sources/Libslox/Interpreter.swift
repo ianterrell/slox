@@ -1,8 +1,15 @@
 class Interpreter: StmtVisitor, ExprVisitor {
-  let environment = Environment()
+  var environment = Environment()
 
   func interpret(_ program: [Stmt]) throws {
     try program.forEach(execute)
+  }
+
+  func executeBlock(_ stmts: [Stmt], env: Environment) throws {
+    let previous = environment
+    defer { environment = previous }
+    environment = env
+    try stmts.forEach(execute)
   }
 
   func execute(_ stmt: Stmt) throws {
@@ -22,9 +29,19 @@ class Interpreter: StmtVisitor, ExprVisitor {
     print(value)
   }
 
+  func visit(_ stmt: BlockStmt) throws {
+    try executeBlock(stmt.statements, env: Environment(parent: environment))
+  }
+
   func visit(_ stmt: VarStmt) throws {
     let value = try stmt.initializer.flatMap(evaluate) ?? .nil
     environment.define(name: stmt.name, value: value)
+  }
+
+  func visit(_ expr: AssignExpr) throws -> Value {
+    let value = try evaluate(expr.value)
+    try environment.assign(name: expr.name, value: value)
+    return value
   }
 
   func visit(_ expr: BinaryExpr) throws -> Value {

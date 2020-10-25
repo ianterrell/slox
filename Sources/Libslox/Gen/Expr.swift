@@ -9,11 +9,27 @@ protocol Expr: class {
 protocol ExprVisitor {
   associatedtype ExprResult
 
+  func visit(_ expr: AssignExpr) throws -> ExprResult
   func visit(_ expr: BinaryExpr) throws -> ExprResult
   func visit(_ expr: GroupingExpr) throws -> ExprResult
   func visit(_ expr: LiteralExpr) throws -> ExprResult
   func visit(_ expr: UnaryExpr) throws -> ExprResult
   func visit(_ expr: VariableExpr) throws -> ExprResult
+}
+
+class AssignExpr: Expr {
+  let name: Token
+  let value: Expr
+
+  init(name: Token, value: Expr) {
+    self.name = name
+    self.value = value
+  }
+
+  @discardableResult
+  func accept<T: ExprVisitor>(visitor: T) throws -> T.ExprResult {
+    return try visitor.visit(self)
+  }
 }
 
 class BinaryExpr: Expr {

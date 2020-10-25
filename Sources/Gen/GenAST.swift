@@ -3,12 +3,14 @@ class ASTGenerator: BaseGenerator {
   typealias ASTList = [(typeName: String, attributes: [Attribute])]
 
   static let statements: ASTList = [
+    ("BlockStmt", [("statements", "[Stmt]")]),
     ("ExpressionStmt", [("expr", "Expr")]),
     ("PrintStmt", [("expr", "Expr")]),
     ("VarStmt", [("name", "Token"), ("initializer", "Expr?")]),
   ]
 
   static let expressions: ASTList = [
+    ("AssignExpr", [("name", "Token"), ("value", "Expr")]),
     ("BinaryExpr", [("left", "Expr"), ("op", "Token"), ("right", "Expr")]),
     ("GroupingExpr", [("expr", "Expr")]),
     ("LiteralExpr", [("value", "Value")]),

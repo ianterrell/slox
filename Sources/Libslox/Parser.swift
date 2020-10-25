@@ -102,7 +102,7 @@ class Parser {
     let name = previous()
     let initializer = match(.EQUAL) ? try expression() : nil
     guard consume(.SEMICOLON) else {
-      throw SyntaxError.missingSemicolon(location: peek().location)
+      throw SyntaxError.missingSemicolon(location: previous().location)
     }
     return VarStmt(name: name, initializer: initializer)
   }
@@ -111,21 +111,35 @@ class Parser {
     if match(.PRINT) {
       return try printStatement()
     }
+    if match(.LEFT_BRACE) {
+      return try blockStatement()
+    }
     return try expressionStatement()
   }
 
   func printStatement() throws -> Stmt {
     let expr = try expression()
     guard consume(.SEMICOLON) else {
-      throw SyntaxError.missingSemicolon(location: peek().location)
+      throw SyntaxError.missingSemicolon(location: previous().location)
     }
     return PrintStmt(expr: expr)
+  }
+
+  func blockStatement() throws -> Stmt {
+    var statements: [Stmt] = []
+    while !check(.RIGHT_BRACE) && !isAtEnd {
+      statements.append(try declaration())
+    }
+    guard consume(.RIGHT_BRACE) else {
+      throw SyntaxError.missingBrace(location: previous().location)
+    }
+    return BlockStmt(statements: statements)
   }
 
   func expressionStatement() throws -> Stmt {
     let expr = try expression()
     guard consume(.SEMICOLON) else {
-      throw SyntaxError.missingSemicolon(location: peek().location)
+      throw SyntaxError.missingSemicolon(location: previous().location)
     }
     return ExpressionStmt(expr: expr)
   }
@@ -133,7 +147,20 @@ class Parser {
   // MARK:- Parsing Expressions
 
   func expression() throws -> Expr {
-    return try equality()
+    return try assignment()
+  }
+
+  func assignment() throws -> Expr {
+    let expr = try equality()
+    if match(.EQUAL) {
+      let equals = previous()
+      let value = try assignment()
+      if let varExpr = expr as? VariableExpr {
+        return AssignExpr(name: varExpr.name, value: value)
+      }
+      throw SyntaxError.invalidAssignmentTarget(location: equals.location)
+    }
+    return expr
   }
 
   func equality() throws -> Expr {

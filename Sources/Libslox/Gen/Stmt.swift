@@ -9,9 +9,23 @@ protocol Stmt: class {
 protocol StmtVisitor {
   associatedtype StmtResult
 
+  func visit(_ stmt: BlockStmt) throws -> StmtResult
   func visit(_ stmt: ExpressionStmt) throws -> StmtResult
   func visit(_ stmt: PrintStmt) throws -> StmtResult
   func visit(_ stmt: VarStmt) throws -> StmtResult
+}
+
+class BlockStmt: Stmt {
+  let statements: [Stmt]
+
+  init(statements: [Stmt]) {
+    self.statements = statements
+  }
+
+  @discardableResult
+  func accept<T: StmtVisitor>(visitor: T) throws -> T.StmtResult {
+    return try visitor.visit(self)
+  }
 }
 
 class ExpressionStmt: Stmt {
