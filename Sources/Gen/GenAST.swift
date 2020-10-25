@@ -3,6 +3,7 @@ class ASTGenerator: BaseGenerator {
   typealias ASTList = [(typeName: String, attributes: [Attribute])]
 
   static let statements: ASTList = [
+    ("IfStmt", [("condition", "Expr"), ("thenBranch", "Stmt"), ("elseBranch", "Stmt?")]),
     ("BlockStmt", [("statements", "[Stmt]")]),
     ("ExpressionStmt", [("expr", "Expr")]),
     ("PrintStmt", [("expr", "Expr")]),

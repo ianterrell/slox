@@ -29,6 +29,15 @@ class Interpreter: StmtVisitor, ExprVisitor {
     print(value)
   }
 
+  func visit(_ stmt: IfStmt) throws {
+    let value = try evaluate(stmt.condition)
+    if isTruthy(value) {
+      try stmt.thenBranch.accept(visitor: self)
+    } else {
+      try stmt.elseBranch?.accept(visitor: self)
+    }
+  }
+
   func visit(_ stmt: BlockStmt) throws {
     try executeBlock(stmt.statements, env: Environment(parent: environment))
   }
@@ -86,7 +95,7 @@ class Interpreter: StmtVisitor, ExprVisitor {
   }
 
   func visit(_ expr: GroupingExpr) throws -> Value {
-    return try evaluate(expr)
+    return try evaluate(expr.expr)
   }
 
   func visit(_ expr: LiteralExpr) throws -> Value {

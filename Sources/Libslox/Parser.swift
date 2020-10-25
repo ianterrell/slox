@@ -62,7 +62,6 @@ class Parser {
         return true
       }
     }
-
     return false
   }
 
@@ -108,6 +107,9 @@ class Parser {
   }
 
   func statement() throws -> Stmt {
+    if match(.IF) {
+      return try ifStatement()
+    }
     if match(.PRINT) {
       return try printStatement()
     }
@@ -115,6 +117,19 @@ class Parser {
       return try blockStatement()
     }
     return try expressionStatement()
+  }
+
+  func ifStatement() throws -> Stmt {
+    guard consume(.LEFT_PAREN) else {
+      throw SyntaxError.missingLeftParen(location: previous().location)
+    }
+    let condition = try expression()
+    guard consume(.RIGHT_PAREN) else {
+      throw SyntaxError.missingRightParen(location: previous().location)
+    }
+    let thenBranch = try statement()
+    let elseBranch = match(.ELSE) ? try statement() : nil
+    return IfStmt(condition: condition, thenBranch: thenBranch, elseBranch: elseBranch)
   }
 
   func printStatement() throws -> Stmt {
@@ -131,7 +146,7 @@ class Parser {
       statements.append(try declaration())
     }
     guard consume(.RIGHT_BRACE) else {
-      throw SyntaxError.missingBrace(location: previous().location)
+      throw SyntaxError.missingRightBrace(location: previous().location)
     }
     return BlockStmt(statements: statements)
   }
@@ -235,7 +250,7 @@ class Parser {
     if match(.LEFT_PAREN) {
       let expr =  try expression()
       guard consume(.RIGHT_PAREN) else {
-        throw SyntaxError.missingParen(location: peek().location)
+        throw SyntaxError.missingRightParen(location: peek().location)
       }
       return GroupingExpr(expr: expr)
     }

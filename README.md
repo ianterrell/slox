@@ -12,6 +12,14 @@ Following along with [Crafting Interpreters](https://craftinginterpreters.com), 
 
 To make this language more my own, I'd like to change a few things about Lox.
 
-- [ ] remove nil
-- [ ] remove semicolons
-- [ ] add +=, -=, /=, *= operators
+## Language Improvements
+
+- [ ] Remove nil
+- [ ] Remove semicolons
+- [ ] Remove parentheses from conditionals; require block statement
+- [ ] Add +=, -=, /=, *= operators
+
+## Refactors
+
+- [ ] Rewrite `Parser` `match()` calls with pattern matching; look at `if`-chains!
+- [ ] Distinguish statement-starting tokens from other tokens?

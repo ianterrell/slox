@@ -10,12 +10,14 @@ public enum SyntaxError: LoxError, SourceFindable, CustomStringConvertible {
   case unexpectedCharacter(location: String.Index)
   case unterminatedString(location: String.Index)
   case notANumber(location: String.Index)
-  case missingParen(location: String.Index)
+  case missingLeftParen(location: String.Index)
+  case missingRightParen(location: String.Index)
   case missingExpression(location: String.Index)
   case missingSemicolon(location: String.Index)
   case missingIdentifier(location: String.Index)
   case invalidAssignmentTarget(location: String.Index)
-  case missingBrace(location: String.Index)
+  case missingLeftBrace(location: String.Index)
+  case missingRightBrace(location: String.Index)
 
   public var description: String {
     return "Syntax Error: \(subdescription)"
@@ -26,12 +28,14 @@ public enum SyntaxError: LoxError, SourceFindable, CustomStringConvertible {
     case .unexpectedCharacter: return "Unexpected character"
     case .unterminatedString: return "Unterminated string"
     case .notANumber: return "Not a number"
-    case .missingParen: return "Expect ')' after expression"
+    case .missingLeftParen: return "Expect '('"
+    case .missingRightParen: return "Expect ')'"
     case .missingExpression: return "Expect expression"
     case .missingSemicolon: return "Expect semicolon after statement"
     case .missingIdentifier: return "Expect identifier"
     case .invalidAssignmentTarget: return "Invalid assignment target"
-    case .missingBrace: return "Expect '}' after block"
+    case .missingLeftBrace: return "Expect '}'"
+    case .missingRightBrace: return "Expect '}'"
     }
   }
 
@@ -40,12 +44,14 @@ public enum SyntaxError: LoxError, SourceFindable, CustomStringConvertible {
     case .unexpectedCharacter(let i): return i
     case .unterminatedString(let i): return i
     case .notANumber(let i): return i
-    case .missingParen(let i): return i
+    case .missingLeftParen(let i): return i
+    case .missingRightParen(let i): return i
     case .missingExpression(let i): return i
     case .missingSemicolon(let i): return i
     case .missingIdentifier(let i): return i
     case .invalidAssignmentTarget(let i): return i
-    case .missingBrace(let i): return i
+    case .missingLeftBrace(let i): return i
+    case .missingRightBrace(let i): return i
     }
   }
 }

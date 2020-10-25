@@ -9,10 +9,28 @@ protocol Stmt: class {
 protocol StmtVisitor {
   associatedtype StmtResult
 
+  func visit(_ stmt: IfStmt) throws -> StmtResult
   func visit(_ stmt: BlockStmt) throws -> StmtResult
   func visit(_ stmt: ExpressionStmt) throws -> StmtResult
   func visit(_ stmt: PrintStmt) throws -> StmtResult
   func visit(_ stmt: VarStmt) throws -> StmtResult
+}
+
+class IfStmt: Stmt {
+  let condition: Expr
+  let thenBranch: Stmt
+  let elseBranch: Stmt?
+
+  init(condition: Expr, thenBranch: Stmt, elseBranch: Stmt?) {
+    self.condition = condition
+    self.thenBranch = thenBranch
+    self.elseBranch = elseBranch
+  }
+
+  @discardableResult
+  func accept<T: StmtVisitor>(visitor: T) throws -> T.StmtResult {
+    return try visitor.visit(self)
+  }
 }
 
 class BlockStmt: Stmt {
