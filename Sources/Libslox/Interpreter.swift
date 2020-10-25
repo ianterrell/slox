@@ -32,9 +32,9 @@ class Interpreter: StmtVisitor, ExprVisitor {
   func visit(_ stmt: IfStmt) throws {
     let value = try evaluate(stmt.condition)
     if isTruthy(value) {
-      try stmt.thenBranch.accept(visitor: self)
+      try execute(stmt.thenBranch)
     } else {
-      try stmt.elseBranch?.accept(visitor: self)
+      try stmt.elseBranch.flatMap(execute)
     }
   }
 
@@ -45,6 +45,12 @@ class Interpreter: StmtVisitor, ExprVisitor {
   func visit(_ stmt: VarStmt) throws {
     let value = try stmt.initializer.flatMap(evaluate) ?? .nil
     environment.define(name: stmt.name, value: value)
+  }
+
+  func visit(_ stmt: WhileStmt) throws {
+    while isTruthy(try evaluate(stmt.condition)) {
+      try execute(stmt.body)
+    }
   }
 
   func visit(_ expr: AssignExpr) throws -> Value {

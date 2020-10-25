@@ -14,6 +14,7 @@ protocol StmtVisitor {
   func visit(_ stmt: ExpressionStmt) throws -> StmtResult
   func visit(_ stmt: PrintStmt) throws -> StmtResult
   func visit(_ stmt: VarStmt) throws -> StmtResult
+  func visit(_ stmt: WhileStmt) throws -> StmtResult
 }
 
 class IfStmt: Stmt {
@@ -79,6 +80,21 @@ class VarStmt: Stmt {
   init(name: Token, initializer: Expr?) {
     self.name = name
     self.initializer = initializer
+  }
+
+  @discardableResult
+  func accept<T: StmtVisitor>(visitor: T) throws -> T.StmtResult {
+    return try visitor.visit(self)
+  }
+}
+
+class WhileStmt: Stmt {
+  let condition: Expr
+  let body: Stmt
+
+  init(condition: Expr, body: Stmt) {
+    self.condition = condition
+    self.body = body
   }
 
   @discardableResult

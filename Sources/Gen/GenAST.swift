@@ -8,6 +8,7 @@ class ASTGenerator: BaseGenerator {
     ("ExpressionStmt", [("expr", "Expr")]),
     ("PrintStmt", [("expr", "Expr")]),
     ("VarStmt", [("name", "Token"), ("initializer", "Expr?")]),
+    ("WhileStmt", [("condition", "Expr"), ("body", "Stmt")]),
   ]
 
   static let expressions: ASTList = [

@@ -73,6 +73,15 @@ class DotPrinterVisitor: StmtVisitor, ExprVisitor {
     }
   }
 
+  func visit(_ stmt: WhileStmt) {
+    print("\(nodeName(for: stmt)) [label=\"while\" shape=box]")
+    print("\(nodeName(for: stmt)) -> \(nodeName(for: stmt.condition)) [label=\"cond\"]")
+    try! stmt.condition.accept(visitor: self)
+
+    print("\(nodeName(for: stmt)) -> \(nodeName(for: stmt.body)) [label=\"body\"]")
+    try! stmt.body.accept(visitor: self)
+  }
+
   func visit(_ expr: AssignExpr) {
     print("\(nodeName(for: expr)) [label=\"\(expr.name.lexeme) =\" shape=box]")
     print("\(nodeName(for: expr)) -> \(nodeName(for: expr.value))")

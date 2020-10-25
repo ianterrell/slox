@@ -111,15 +111,10 @@ class Parser {
   }
 
   func statement() throws -> Stmt {
-    if match(.IF) {
-      return try ifStatement()
-    }
-    if match(.PRINT) {
-      return try printStatement()
-    }
-    if match(.LEFT_BRACE) {
-      return try blockStatement()
-    }
+    if match(.IF) { return try ifStatement() }
+    if match(.PRINT) { return try printStatement() }
+    if match(.WHILE) { return try whileStatement() }
+    if match(.LEFT_BRACE) { return try blockStatement() }
     return try expressionStatement()
   }
 
@@ -142,6 +137,18 @@ class Parser {
       throw SyntaxError.missingSemicolon(location: previous().location)
     }
     return PrintStmt(expr: expr)
+  }
+
+  func whileStatement() throws -> Stmt {
+    guard consume(.LEFT_PAREN) else {
+      throw SyntaxError.missingLeftParen(location: previous().location)
+    }
+    let condition = try expression()
+    guard consume(.RIGHT_PAREN) else {
+      throw SyntaxError.missingRightParen(location: previous().location)
+    }
+    let body = try statement()
+    return WhileStmt(condition: condition, body: body)
   }
 
   func blockStatement() throws -> Stmt {
