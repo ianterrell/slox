@@ -1,4 +1,6 @@
 class Interpreter: StmtVisitor, ExprVisitor {
+  let environment = Environment()
+
   func interpret(_ program: [Stmt]) throws {
     try program.forEach(execute)
   }
@@ -18,6 +20,11 @@ class Interpreter: StmtVisitor, ExprVisitor {
   func visit(_ stmt: PrintStmt) throws {
     let value = try evaluate(stmt.expr)
     print(value)
+  }
+
+  func visit(_ stmt: VarStmt) throws {
+    let value = try stmt.initializer.flatMap(evaluate) ?? .nil
+    environment.define(name: stmt.name, value: value)
   }
 
   func visit(_ expr: BinaryExpr) throws -> Value {
@@ -77,6 +84,10 @@ class Interpreter: StmtVisitor, ExprVisitor {
     case (.MINUS, _): throw RuntimeError.unaryOperatorRequiresNumeric(op: expr.op.lexeme, location: expr.op.location)
     default: throw RuntimeError.internalError(location: expr.op.location, message: "Invalid operator for unary expression; should not have parsed")
     }
+  }
+
+  func visit(_ expr: VariableExpr) throws -> Value {
+    return try environment.get(name: expr.name)
   }
 
   func isTruthy(_ value: Value) -> Bool {

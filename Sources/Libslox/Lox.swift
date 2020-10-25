@@ -15,6 +15,12 @@ public class Lox {
     self.replPrompt = replPrompt
   }
 
+  public func debugPrint(_ script: String) throws {
+    let tokens = try Scanner(source: script).scanTokens()
+    let program = try Parser(tokens: tokens).parse()
+    DotPrinter().print(program)
+  }
+
   public func run(_ script: String) throws {
     let tokens = try Scanner(source: script).scanTokens()
     let program = try Parser(tokens: tokens).parse()

@@ -1,7 +1,7 @@
 public protocol LoxError: Error {}
 
-public protocol CompositeLoxError {
-  var errors: [LoxError] { get }
+public struct CompositeLoxError: LoxError {
+  public let errors: [LoxError]
 }
 
 // MARK:- Syntax Errors
@@ -13,6 +13,7 @@ public enum SyntaxError: LoxError, SourceFindable, CustomStringConvertible {
   case missingParen(location: String.Index)
   case missingExpression(location: String.Index)
   case missingSemicolon(location: String.Index)
+  case missingIdentifier(location: String.Index)
 
   public var description: String {
     return "Syntax Error: \(subdescription)"
@@ -26,6 +27,7 @@ public enum SyntaxError: LoxError, SourceFindable, CustomStringConvertible {
     case .missingParen: return "Expect ')' after expression"
     case .missingExpression: return "Expect expression"
     case .missingSemicolon: return "Expect semicolon after statement"
+    case .missingIdentifier: return "Expect identifier"
     }
   }
 
@@ -37,6 +39,7 @@ public enum SyntaxError: LoxError, SourceFindable, CustomStringConvertible {
     case .missingParen(let i): return i
     case .missingExpression(let i): return i
     case .missingSemicolon(let i): return i
+    case .missingIdentifier(let i): return i
     }
   }
 }
@@ -47,6 +50,7 @@ public enum RuntimeError: LoxError, SourceFindable, CustomStringConvertible {
   case binaryOperatorRequiresNumeric(op: String, location: String.Index)
   case binaryOperatorRequiresNumericOrString(op: String, location: String.Index)
   case unaryOperatorRequiresNumeric(op: String, location: String.Index)
+  case undefinedVariable(name: String, location: String.Index)
   case internalError(location: String.Index, message: String)
 
   public var description: String {
@@ -58,6 +62,7 @@ public enum RuntimeError: LoxError, SourceFindable, CustomStringConvertible {
     case .binaryOperatorRequiresNumeric(let op, _): return "Binary operator \(op) requires numeric operands"
     case .binaryOperatorRequiresNumericOrString(let op, _): return "Binary operator \(op) requires both operands to be either numeric or string"
     case .unaryOperatorRequiresNumeric(let op, _): return "Binary operator \(op) requires numeric operand"
+    case .undefinedVariable(let name, _): return "Variable '\(name)' is undefined"
     case .internalError(_, let message): return message
     }
   }
@@ -67,6 +72,7 @@ public enum RuntimeError: LoxError, SourceFindable, CustomStringConvertible {
     case .binaryOperatorRequiresNumeric(_, let i): return i
     case .binaryOperatorRequiresNumericOrString(_, let i): return i
     case .unaryOperatorRequiresNumeric(_, let i): return i
+    case .undefinedVariable(_, let i): return i
     case .internalError(let i, _): return i
     }
   }

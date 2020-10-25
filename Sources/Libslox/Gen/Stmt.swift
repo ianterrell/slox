@@ -3,14 +3,15 @@
 //
 
 protocol Stmt: class {
-  @discardableResult func accept<T: StmtVisitor>(visitor: T) throws -> T.Result
+  @discardableResult func accept<T: StmtVisitor>(visitor: T) throws -> T.StmtResult
 }
 
 protocol StmtVisitor {
-  associatedtype Result
+  associatedtype StmtResult
 
-  func visit(_ stmt: ExpressionStmt) throws -> Result
-  func visit(_ stmt: PrintStmt) throws -> Result
+  func visit(_ stmt: ExpressionStmt) throws -> StmtResult
+  func visit(_ stmt: PrintStmt) throws -> StmtResult
+  func visit(_ stmt: VarStmt) throws -> StmtResult
 }
 
 class ExpressionStmt: Stmt {
@@ -21,7 +22,7 @@ class ExpressionStmt: Stmt {
   }
 
   @discardableResult
-  func accept<T: StmtVisitor>(visitor: T) throws -> T.Result {
+  func accept<T: StmtVisitor>(visitor: T) throws -> T.StmtResult {
     return try visitor.visit(self)
   }
 }
@@ -34,7 +35,22 @@ class PrintStmt: Stmt {
   }
 
   @discardableResult
-  func accept<T: StmtVisitor>(visitor: T) throws -> T.Result {
+  func accept<T: StmtVisitor>(visitor: T) throws -> T.StmtResult {
+    return try visitor.visit(self)
+  }
+}
+
+class VarStmt: Stmt {
+  let name: Token
+  let initializer: Expr?
+
+  init(name: Token, initializer: Expr?) {
+    self.name = name
+    self.initializer = initializer
+  }
+
+  @discardableResult
+  func accept<T: StmtVisitor>(visitor: T) throws -> T.StmtResult {
     return try visitor.visit(self)
   }
 }

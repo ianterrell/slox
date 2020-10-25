@@ -8,8 +8,19 @@ class Parser {
 
   func parse() throws -> [Stmt] {
     var statements: [Stmt] = []
+    var errors: [LoxError] = []
     while !isAtEnd {
-      statements.append(try statement())
+      do {
+        statements.append(try declaration())
+      } catch let error as SyntaxError {
+        errors.append(error)
+        synchronize()
+      } catch {
+        fatalError("Unexpected error: \(error)")
+      }
+    }
+    guard errors.isEmpty else {
+      throw CompositeLoxError(errors: errors)
     }
     return statements
   }
@@ -76,6 +87,25 @@ class Parser {
   }
 
   // MARK:- Parsing Statements
+
+  func declaration() throws -> Stmt {
+    if match(.VAR) {
+      return try varDeclaration()
+    }
+    return try statement()
+  }
+
+  func varDeclaration() throws -> Stmt {
+    guard consume(.IDENTIFIER) else {
+      throw SyntaxError.missingIdentifier(location: peek().location)
+    }
+    let name = previous()
+    let initializer = match(.EQUAL) ? try expression() : nil
+    guard consume(.SEMICOLON) else {
+      throw SyntaxError.missingSemicolon(location: peek().location)
+    }
+    return VarStmt(name: name, initializer: initializer)
+  }
 
   func statement() throws -> Stmt {
     if match(.PRINT) {
@@ -171,6 +201,9 @@ class Parser {
     }
     if match(.STRING), case .STRING(_, _, let s) = previous() {
       return LiteralExpr(value: .string(s))
+    }
+    if match(.IDENTIFIER) {
+      return VariableExpr(name: previous())
     }
     if match(.LEFT_PAREN) {
       let expr =  try expression()

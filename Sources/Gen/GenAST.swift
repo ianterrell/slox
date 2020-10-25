@@ -5,6 +5,7 @@ class ASTGenerator: BaseGenerator {
   static let statements: ASTList = [
     ("ExpressionStmt", [("expr", "Expr")]),
     ("PrintStmt", [("expr", "Expr")]),
+    ("VarStmt", [("name", "Token"), ("initializer", "Expr?")]),
   ]
 
   static let expressions: ASTList = [
@@ -12,6 +13,7 @@ class ASTGenerator: BaseGenerator {
     ("GroupingExpr", [("expr", "Expr")]),
     ("LiteralExpr", [("value", "Value")]),
     ("UnaryExpr", [("op", "Token"), ("right", "Expr")]),
+    ("VariableExpr", [("name", "Token")]),
   ]
 
   func genExpr() -> String { return genAST(type: "Expr", list: Self.expressions) }
@@ -19,17 +21,17 @@ class ASTGenerator: BaseGenerator {
 
   func genAST(type: String, list: ASTList) -> String {
     let types = list.map { genType(type: type, name: $0.typeName, attributes: $0.attributes) }
-    let visitFuncs = list.map { "func visit(_ \(type.lowercased()): \($0.typeName)) throws -> Result" }
+    let visitFuncs = list.map { "func visit(_ \(type.lowercased()): \($0.typeName)) throws -> \(type)Result" }
 
     return """
     \(generatedCodeWarning)
 
     protocol \(type): class {
-      @discardableResult func accept<T: \(type)Visitor>(visitor: T) throws -> T.Result
+      @discardableResult func accept<T: \(type)Visitor>(visitor: T) throws -> T.\(type)Result
     }
 
     protocol \(type)Visitor {
-      associatedtype Result
+      associatedtype \(type)Result
 
     \(indent(2, visitFuncs))
     }
@@ -53,7 +55,7 @@ class ASTGenerator: BaseGenerator {
       }
 
       @discardableResult
-      func accept<T: \(type)Visitor>(visitor: T) throws -> T.Result {
+      func accept<T: \(type)Visitor>(visitor: T) throws -> T.\(type)Result {
         return try visitor.visit(self)
       }
     }

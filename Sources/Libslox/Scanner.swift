@@ -1,7 +1,3 @@
-public struct ScanError: LoxError, CompositeLoxError {
-  public let errors: [LoxError]
-}
-
 class Scanner {
   let source: String
 
@@ -35,7 +31,7 @@ class Scanner {
     if errors.isEmpty {
       return tokens
     } else {
-      throw ScanError(errors: errors)
+      throw CompositeLoxError(errors: errors)
     }
   }
 

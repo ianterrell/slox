@@ -13,6 +13,7 @@ protocol ExprVisitor {
   func visit(_ expr: GroupingExpr) throws -> ExprResult
   func visit(_ expr: LiteralExpr) throws -> ExprResult
   func visit(_ expr: UnaryExpr) throws -> ExprResult
+  func visit(_ expr: VariableExpr) throws -> ExprResult
 }
 
 class BinaryExpr: Expr {
@@ -65,6 +66,19 @@ class UnaryExpr: Expr {
   init(op: Token, right: Expr) {
     self.op = op
     self.right = right
+  }
+
+  @discardableResult
+  func accept<T: ExprVisitor>(visitor: T) throws -> T.ExprResult {
+    return try visitor.visit(self)
+  }
+}
+
+class VariableExpr: Expr {
+  let name: Token
+
+  init(name: Token) {
+    self.name = name
   }
 
   @discardableResult
