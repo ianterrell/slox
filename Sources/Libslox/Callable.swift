@@ -42,6 +42,10 @@ extension Builtin {
 }
 
 class LoxFunction: LoxCallable, CustomStringConvertible {
+  struct Return: Error {
+    let value: Value
+  }
+
   let declaration: FunctionStmt
   let arity: Int
 
@@ -57,7 +61,11 @@ class LoxFunction: LoxCallable, CustomStringConvertible {
     for (p, v) in zip(declaration.params, arguments) {
       environment.define(name: p.lexeme, value: v)
     }
-    try interpreter.executeBlock(declaration.body, env: environment)
+    do {
+      try interpreter.executeBlock(declaration.body, env: environment)
+    } catch let e as Return {
+      return e.value
+    }
     return .nil
   }
 }

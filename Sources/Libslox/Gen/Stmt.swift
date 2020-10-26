@@ -14,6 +14,7 @@ protocol StmtVisitor {
   func visit(_ stmt: ExpressionStmt) throws -> StmtResult
   func visit(_ stmt: FunctionStmt) throws -> StmtResult
   func visit(_ stmt: PrintStmt) throws -> StmtResult
+  func visit(_ stmt: ReturnStmt) throws -> StmtResult
   func visit(_ stmt: VarStmt) throws -> StmtResult
   func visit(_ stmt: WhileStmt) throws -> StmtResult
 }
@@ -83,6 +84,21 @@ class PrintStmt: Stmt {
 
   init(expr: Expr) {
     self.expr = expr
+  }
+
+  @discardableResult
+  func accept<T: StmtVisitor>(visitor: T) throws -> T.StmtResult {
+    return try visitor.visit(self)
+  }
+}
+
+class ReturnStmt: Stmt {
+  let keyword: Token
+  let value: Expr
+
+  init(keyword: Token, value: Expr) {
+    self.keyword = keyword
+    self.value = value
   }
 
   @discardableResult

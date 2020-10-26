@@ -66,6 +66,10 @@ public class Interpreter: StmtVisitor, ExprVisitor {
     }
   }
 
+  func visit(_ stmt: ReturnStmt) throws {
+    throw LoxFunction.Return(value: try evaluate(stmt.value))
+  }
+
   func visit(_ expr: AssignExpr) throws -> Value {
     let value = try evaluate(expr.value)
     try environment.assign(name: expr.name, value: value)

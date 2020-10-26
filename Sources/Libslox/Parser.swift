@@ -144,6 +144,7 @@ class Parser {
     if match(.PRINT) { return try printStatement() }
     if match(.WHILE) { return try whileStatement() }
     if match(.FOR) { return try forStatement() }
+    if match(.RETURN) { return try returnStatement() }
     if match(.LEFT_BRACE) { return try blockStatement() }
     return try expressionStatement()
   }
@@ -217,6 +218,18 @@ class Parser {
       stmt = BlockStmt(statements: [initializer, stmt])
     }
     return stmt
+  }
+
+  func returnStatement() throws -> Stmt {
+    let keyword = previous()
+    var value: Expr?
+    if !check(.SEMICOLON) {
+      value = try expression()
+    }
+    guard consume(.SEMICOLON) else {
+      throw SyntaxError(previous().location, "Expect ';' after return")
+    }
+    return ReturnStmt(keyword: keyword, value: value ?? LiteralExpr(value: .nil))
   }
 
   func blockStatement() throws -> Stmt {

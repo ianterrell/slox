@@ -92,6 +92,12 @@ class DotPrinterVisitor: StmtVisitor, ExprVisitor {
     try! stmt.body.accept(visitor: self)
   }
 
+  func visit(_ stmt: ReturnStmt) throws {
+    print("\(nodeName(for: stmt)) [label=\"return\" shape=box]")
+    print("\(nodeName(for: stmt)) -> \(nodeName(for: stmt.value))")
+    try! stmt.value.accept(visitor: self)
+  }
+
   func visit(_ expr: AssignExpr) {
     print("\(nodeName(for: expr)) [label=\"\(expr.name.lexeme) =\" shape=box]")
     print("\(nodeName(for: expr)) -> \(nodeName(for: expr.value))")

@@ -8,6 +8,7 @@ class ASTGenerator: BaseGenerator {
     ("ExpressionStmt", [("expr", "Expr")]),
     ("FunctionStmt", [("name", "Token"), ("params", "[Token]"), ("body", "[Stmt]")]),
     ("PrintStmt", [("expr", "Expr")]),
+    ("ReturnStmt", [("keyword", "Token"), ("value", "Expr")]),
     ("VarStmt", [("name", "Token"), ("initializer", "Expr?")]),
     ("WhileStmt", [("condition", "Expr"), ("body", "Stmt")]),
   ]
