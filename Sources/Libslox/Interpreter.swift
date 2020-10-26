@@ -47,8 +47,12 @@ public class Interpreter: StmtVisitor, ExprVisitor {
   }
 
   func visit(_ stmt: FunctionStmt) throws {
-    let function = LoxFunction(declaration: stmt)
+    let function = LoxFunction(declaration: stmt, closure: environment)
     environment.define(name: stmt.name, value: .function(function))
+  }
+
+  func visit(_ stmt: ReturnStmt) throws {
+    throw LoxFunction.Return(value: try evaluate(stmt.value))
   }
 
   func visit(_ stmt: BlockStmt) throws {
@@ -64,10 +68,6 @@ public class Interpreter: StmtVisitor, ExprVisitor {
     while isTruthy(try evaluate(stmt.condition)) {
       try execute(stmt.body)
     }
-  }
-
-  func visit(_ stmt: ReturnStmt) throws {
-    throw LoxFunction.Return(value: try evaluate(stmt.value))
   }
 
   func visit(_ expr: AssignExpr) throws -> Value {

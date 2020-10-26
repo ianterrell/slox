@@ -47,17 +47,18 @@ class LoxFunction: LoxCallable, CustomStringConvertible {
   }
 
   let declaration: FunctionStmt
-  let arity: Int
+  let closure: Environment
 
+  var arity: Int { return declaration.params.count }
   var description: String { return "<fn \(declaration.name.lexeme)>" }
 
-  init(declaration: FunctionStmt) {
+  init(declaration: FunctionStmt, closure: Environment) {
     self.declaration = declaration
-    self.arity = declaration.params.count
+    self.closure = closure
   }
 
   func call(interpreter: Interpreter, arguments: [Value]) throws -> Value {
-    let environment = Environment(parent: interpreter.globals)
+    let environment = Environment(parent: closure)
     for (p, v) in zip(declaration.params, arguments) {
       environment.define(name: p.lexeme, value: v)
     }
