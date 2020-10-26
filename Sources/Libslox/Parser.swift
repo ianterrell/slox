@@ -1,5 +1,7 @@
 class Parser {
   let tokens: [Token]
+  var statements: [Stmt] = []
+  var errors: [LoxError] = []
   var current = 0
 
   init(tokens: [Token]) {
@@ -7,8 +9,6 @@ class Parser {
   }
 
   func parse() throws -> [Stmt] {
-    var statements: [Stmt] = []
-    var errors: [LoxError] = []
     while !isAtEnd {
       do {
         statements.append(try declaration())
@@ -92,20 +92,49 @@ class Parser {
   }
 
   func declaration() throws -> Stmt {
-    if match(.VAR) {
-      return try varDeclaration()
-    }
+    if match(.FUN) { return try function("function") }
+    if match(.VAR) { return try varDeclaration() }
     return try statement()
+  }
+
+  func function(_ kind: String) throws -> Stmt {
+    guard consume(.IDENTIFIER) else {
+      throw SyntaxError(peek().location, "Expect \(kind) name")
+    }
+    let name = previous()
+    guard consume(.LEFT_PAREN) else {
+      throw SyntaxError(previous().location, "Expect '(' after \(kind) name")
+    }
+    var parameters: [Token] = []
+    if !check(.RIGHT_PAREN) {
+      repeat {
+        guard consume(.IDENTIFIER) else {
+          throw SyntaxError(peek().location, "Expect parameter name")
+        }
+        parameters.append(previous())
+        if parameters.count > Constant.maxFunctionArguments {
+          errors.append(SyntaxError(peek().location, "Can't have more than \(Constant.maxFunctionArguments) parameters"))
+        }
+      } while match(.COMMA)
+    }
+    guard consume(.RIGHT_PAREN) else {
+      throw SyntaxError(previous().location, "Expect ')' after \(kind) parameters")
+    }
+    guard consume(.LEFT_BRACE) else {
+      throw SyntaxError(previous().location, "Expect '{' before \(kind) body")
+    }
+    let body = try block()
+    return FunctionStmt(name: name, params: parameters, body: body)
   }
 
   func varDeclaration() throws -> Stmt {
     guard consume(.IDENTIFIER) else {
-      throw SyntaxError.missingIdentifier(location: peek().location)
+      throw SyntaxError(peek().location, "Expect variable name")
     }
     let name = previous()
     let initializer = match(.EQUAL) ? try expression() : nil
     guard consume(.SEMICOLON) else {
-      throw SyntaxError.missingSemicolon(location: previous().location)
+      throw SyntaxError(previous().location, "Expect ';' after declaration")
     }
     return VarStmt(name: name, initializer: initializer)
   }
@@ -121,11 +150,11 @@ class Parser {
 
   func ifStatement() throws -> Stmt {
     guard consume(.LEFT_PAREN) else {
-      throw SyntaxError.missingLeftParen(location: previous().location)
+      throw SyntaxError(previous().location, "Expect '(' after if")
     }
     let condition = try expression()
     guard consume(.RIGHT_PAREN) else {
-      throw SyntaxError.missingRightParen(location: previous().location)
+      throw SyntaxError(previous().location, "Expect ')' after conditional")
     }
     let thenBranch = try statement()
     let elseBranch = match(.ELSE) ? try statement() : nil
@@ -135,18 +164,18 @@ class Parser {
   func printStatement() throws -> Stmt {
     let expr = try expression()
     guard consume(.SEMICOLON) else {
-      throw SyntaxError.missingSemicolon(location: previous().location)
+      throw SyntaxError(previous().location, "Expect ';' after value")
     }
     return PrintStmt(expr: expr)
   }
 
   func whileStatement() throws -> Stmt {
     guard consume(.LEFT_PAREN) else {
-      throw SyntaxError.missingLeftParen(location: previous().location)
+      throw SyntaxError(previous().location, "Expect '(' after while")
     }
     let condition = try expression()
     guard consume(.RIGHT_PAREN) else {
-      throw SyntaxError.missingRightParen(location: previous().location)
+      throw SyntaxError(previous().location, "Expect ')' after condition")
     }
     let body = try statement()
     return WhileStmt(condition: condition, body: body)
@@ -154,7 +183,7 @@ class Parser {
 
   func forStatement() throws -> Stmt {
     guard consume(.LEFT_PAREN) else {
-      throw SyntaxError.missingLeftParen(location: previous().location)
+      throw SyntaxError(previous().location, "Expect ')' after for")
     }
 
     var initializer: Stmt?
@@ -166,7 +195,7 @@ class Parser {
     if !match(.SEMICOLON) {
       condition = try expression()
       guard consume(.SEMICOLON) else {
-        throw SyntaxError.missingSemicolon(location: previous().location)
+        throw SyntaxError(previous().location, "Expect ';' in for")
       }
     }
 
@@ -176,7 +205,7 @@ class Parser {
     }
 
     guard consume(.RIGHT_PAREN) else {
-      throw SyntaxError.missingRightParen(location: previous().location)
+      throw SyntaxError(previous().location, "Expect ')' after for statements")
     }
 
     var body = try statement()
@@ -191,20 +220,24 @@ class Parser {
   }
 
   func blockStatement() throws -> Stmt {
+    return BlockStmt(statements: try block())
+  }
+
+  func block() throws -> [Stmt] {
     var statements: [Stmt] = []
     while !check(.RIGHT_BRACE) && !isAtEnd {
       statements.append(try declaration())
     }
     guard consume(.RIGHT_BRACE) else {
-      throw SyntaxError.missingRightBrace(location: previous().location)
+      throw SyntaxError(previous().location, "Expect '}' to end block")
     }
-    return BlockStmt(statements: statements)
+    return statements
   }
 
   func expressionStatement() throws -> Stmt {
     let expr = try expression()
     guard consume(.SEMICOLON) else {
-      throw SyntaxError.missingSemicolon(location: previous().location)
+      throw SyntaxError(previous().location, "Expect ';' after expression")
     }
     return ExpressionStmt(expr: expr)
   }
@@ -223,7 +256,7 @@ class Parser {
       if let varExpr = expr as? VariableExpr {
         return AssignExpr(name: varExpr.name, value: value)
       }
-      throw SyntaxError.invalidAssignmentTarget(location: equals.location)
+      throw SyntaxError(equals.location, "Invalid assignment target")
     }
     return expr
   }
@@ -259,30 +292,30 @@ class Parser {
   }
 
   func comparison() throws -> Expr {
-    var expr =  try term()
+    var expr = try term()
     while match(.GREATER, .GREATER_EQUAL, .LESS, .LESS_EQUAL) {
       let op = previous()
-      let right =  try term()
+      let right = try term()
       expr = BinaryExpr(left: expr, op: op, right: right)
     }
     return expr
   }
 
   func term() throws -> Expr {
-    var expr =  try factor()
+    var expr = try factor()
     while match(.MINUS, .PLUS) {
       let op = previous()
-      let right =  try factor()
+      let right = try factor()
       expr = BinaryExpr(left: expr, op: op, right: right)
     }
     return expr
   }
 
   func factor() throws -> Expr {
-    var expr =  try unary()
+    var expr = try unary()
     while match(.SLASH, .STAR) {
       let op = previous()
-      let right =  try unary()
+      let right = try unary()
       expr = BinaryExpr(left: expr, op: op, right: right)
     }
     return expr
@@ -291,11 +324,40 @@ class Parser {
   func unary() throws -> Expr {
     if match(.BANG, .MINUS) {
       let op = previous()
-      let right =  try unary()
+      let right = try unary()
       return UnaryExpr(op: op, right: right)
     }
 
-    return  try primary()
+    return try call()
+  }
+
+  func call() throws -> Expr {
+    var expr = try primary()
+    while true {
+      if match(.LEFT_PAREN) {
+        expr = try finishCall(expr)
+      } else {
+        break
+      }
+    }
+    return expr
+  }
+
+  func finishCall(_ expr: Expr) throws -> Expr {
+    var arguments: [Expr] = []
+    if !check(.RIGHT_PAREN) {
+      repeat {
+        arguments.append(try expression())
+      } while match(.COMMA)
+    }
+    guard consume(.RIGHT_PAREN) else {
+      throw SyntaxError(previous().location, "Expect ')' after arguments")
+    }
+    let paren = previous()
+    if arguments.count > Constant.maxFunctionArguments {
+      errors.append(SyntaxError(paren.location, "Can't have more than \(Constant.maxFunctionArguments) arguments"))
+    }
+    return CallExpr(callee: expr, paren: paren, arguments: arguments)
   }
 
   func primary() throws -> Expr {
@@ -318,12 +380,12 @@ class Parser {
       return VariableExpr(name: previous())
     }
     if match(.LEFT_PAREN) {
-      let expr =  try expression()
+      let expr = try expression()
       guard consume(.RIGHT_PAREN) else {
-        throw SyntaxError.missingRightParen(location: peek().location)
+        throw SyntaxError(peek().location, "Missing ')'")
       }
       return GroupingExpr(expr: expr)
     }
-    throw SyntaxError.missingExpression(location: peek().location)
+    throw SyntaxError(peek().location, "Expect expression")
   }
 }

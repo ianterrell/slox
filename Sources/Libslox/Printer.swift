@@ -15,6 +15,7 @@ class DotPrinter {
 }
 
 class DotPrinterVisitor: StmtVisitor, ExprVisitor {
+
   init() {
     print("digraph {")
     print("node[fontname=Courier color=gray40]")
@@ -51,6 +52,15 @@ class DotPrinterVisitor: StmtVisitor, ExprVisitor {
     if let elseBranch = stmt.elseBranch {
       print("\(nodeName(for: stmt)) -> \(nodeName(for: elseBranch)) [label=\"else\"]")
       try! elseBranch.accept(visitor: self)
+    }
+  }
+
+  func visit(_ stmt: FunctionStmt) throws {
+    let params = stmt.params.map { $0.lexeme }.joined(separator: ", ")
+    print("\(nodeName(for: stmt)) [label=\"fun \(stmt.name.lexeme)(\(params))\" shape=box]")
+    stmt.body.forEach { bodyStmt in
+      print("\(nodeName(for: stmt)) -> \(nodeName(for: bodyStmt))")
+      try! bodyStmt.accept(visitor: self)
     }
   }
 
@@ -94,6 +104,16 @@ class DotPrinterVisitor: StmtVisitor, ExprVisitor {
     print("\(nodeName(for: expr)) -> \(nodeName(for: expr.right))")
     try! expr.left.accept(visitor: self)
     try! expr.right.accept(visitor: self)
+  }
+
+  func visit(_ expr: CallExpr) throws {
+    print("\(nodeName(for: expr)) [label=\"call\"]")
+    print("\(nodeName(for: expr)) -> \(nodeName(for: expr.callee)) [label=\"callee\"]")
+    try! expr.callee.accept(visitor: self)
+    expr.arguments.forEach { arg in
+      print("\(nodeName(for: expr)) -> \(nodeName(for: arg)) [label=\"arg\"]")
+      try! arg.accept(visitor: self)
+    }
   }
 
   func visit(_ expr: GroupingExpr) {

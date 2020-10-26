@@ -12,6 +12,7 @@ protocol StmtVisitor {
   func visit(_ stmt: IfStmt) throws -> StmtResult
   func visit(_ stmt: BlockStmt) throws -> StmtResult
   func visit(_ stmt: ExpressionStmt) throws -> StmtResult
+  func visit(_ stmt: FunctionStmt) throws -> StmtResult
   func visit(_ stmt: PrintStmt) throws -> StmtResult
   func visit(_ stmt: VarStmt) throws -> StmtResult
   func visit(_ stmt: WhileStmt) throws -> StmtResult
@@ -52,6 +53,23 @@ class ExpressionStmt: Stmt {
 
   init(expr: Expr) {
     self.expr = expr
+  }
+
+  @discardableResult
+  func accept<T: StmtVisitor>(visitor: T) throws -> T.StmtResult {
+    return try visitor.visit(self)
+  }
+}
+
+class FunctionStmt: Stmt {
+  let name: Token
+  let params: [Token]
+  let body: [Stmt]
+
+  init(name: Token, params: [Token], body: [Stmt]) {
+    self.name = name
+    self.params = params
+    self.body = body
   }
 
   @discardableResult

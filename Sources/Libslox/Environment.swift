@@ -10,6 +10,10 @@ class Environment {
     values[name.lexeme] = value
   }
 
+  func define(name: String, value: Value) {
+    values[name] = value
+  }
+
   func assign(name: Token, value: Value) throws {
     if values[name.lexeme] != nil {
       values[name.lexeme] = value
@@ -20,7 +24,7 @@ class Environment {
       return
     }
 
-    throw RuntimeError.undefinedVariable(name: name.lexeme, location: name.location)
+    throw RuntimeError(name.location, "Variable '\(name.lexeme)' is undefined")
   }
 
   func get(name: Token) throws -> Value {
@@ -30,6 +34,6 @@ class Environment {
     if let parent = self.parent {
       return try parent.get(name: name)
     }
-    throw RuntimeError.undefinedVariable(name: name.lexeme, location: name.location)
+    throw RuntimeError(name.location, "Variable '\(name.lexeme)' is undefined")
   }
 }

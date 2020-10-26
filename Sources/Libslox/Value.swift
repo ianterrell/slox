@@ -2,6 +2,7 @@ public enum Value {
   case string(String)
   case number(Double)
   case boolean(Bool)
+  case function(LoxCallable)
   case `nil`
 
   var typeName: String {
@@ -9,7 +10,15 @@ public enum Value {
     case .string: return "String"
     case .number: return "Number"
     case .boolean: return "Boolean"
+    case .function: return "Function"
     case .nil: return "nil"
+    }
+  }
+
+  var callable: LoxCallable? {
+    switch self {
+    case .function(let fn): return fn
+    default: return nil
     }
   }
 }
@@ -23,6 +32,7 @@ extension Value: CustomStringConvertible {
       if s.hasSuffix(".0") { return String(s.dropLast(2)) }
       return s
     case .boolean(let b): return "\(b)"
+    case .function(let f): return "\(f)"
     case .nil: return "nil"
     }
   }

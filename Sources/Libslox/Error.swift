@@ -4,90 +4,30 @@ public struct CompositeLoxError: LoxError {
   public let errors: [LoxError]
 }
 
-// MARK:- Syntax Errors
+public struct SyntaxError: LoxError, SourceFindable, CustomStringConvertible {
+  let location: String.Index
+  let message: String
 
-public enum SyntaxError: LoxError, SourceFindable, CustomStringConvertible {
-  case unexpectedCharacter(location: String.Index)
-  case unterminatedString(location: String.Index)
-  case notANumber(location: String.Index)
-  case missingLeftParen(location: String.Index)
-  case missingRightParen(location: String.Index)
-  case missingExpression(location: String.Index)
-  case missingSemicolon(location: String.Index)
-  case missingIdentifier(location: String.Index)
-  case invalidAssignmentTarget(location: String.Index)
-  case missingLeftBrace(location: String.Index)
-  case missingRightBrace(location: String.Index)
-
-  public var description: String {
-    return "Syntax Error: \(subdescription)"
+  init(_ location: String.Index, _ message: String) {
+    self.location = location
+    self.message = message
   }
 
-  var subdescription: String {
-    switch self {
-    case .unexpectedCharacter: return "Unexpected character"
-    case .unterminatedString: return "Unterminated string"
-    case .notANumber: return "Not a number"
-    case .missingLeftParen: return "Expect '('"
-    case .missingRightParen: return "Expect ')'"
-    case .missingExpression: return "Expect expression"
-    case .missingSemicolon: return "Expect semicolon after statement"
-    case .missingIdentifier: return "Expect identifier"
-    case .invalidAssignmentTarget: return "Invalid assignment target"
-    case .missingLeftBrace: return "Expect '}'"
-    case .missingRightBrace: return "Expect '}'"
-    }
-  }
-
-  public var index: String.Index {
-    switch self {
-    case .unexpectedCharacter(let i): return i
-    case .unterminatedString(let i): return i
-    case .notANumber(let i): return i
-    case .missingLeftParen(let i): return i
-    case .missingRightParen(let i): return i
-    case .missingExpression(let i): return i
-    case .missingSemicolon(let i): return i
-    case .missingIdentifier(let i): return i
-    case .invalidAssignmentTarget(let i): return i
-    case .missingLeftBrace(let i): return i
-    case .missingRightBrace(let i): return i
-    }
-  }
+  public var description: String { return message }
+  public var index: String.Index { return location }
 }
 
-// MARK:- Runtime Errors
+public struct RuntimeError: LoxError, SourceFindable, CustomStringConvertible {
+  let location: String.Index
+  let message: String
 
-public enum RuntimeError: LoxError, SourceFindable, CustomStringConvertible {
-  case binaryOperatorRequiresNumeric(op: String, location: String.Index)
-  case binaryOperatorRequiresNumericOrString(op: String, location: String.Index)
-  case unaryOperatorRequiresNumeric(op: String, location: String.Index)
-  case undefinedVariable(name: String, location: String.Index)
-  case internalError(location: String.Index, message: String)
-
-  public var description: String {
-    return "Runtime Error: \(subdescription)"
+  init(_ location: String.Index, _ message: String) {
+    self.location = location
+    self.message = message
   }
 
-  var subdescription: String {
-    switch self {
-    case .binaryOperatorRequiresNumeric(let op, _): return "Binary operator \(op) requires numeric operands"
-    case .binaryOperatorRequiresNumericOrString(let op, _): return "Binary operator \(op) requires both operands to be either numeric or string"
-    case .unaryOperatorRequiresNumeric(let op, _): return "Binary operator \(op) requires numeric operand"
-    case .undefinedVariable(let name, _): return "Variable '\(name)' is undefined"
-    case .internalError(_, let message): return message
-    }
-  }
-
-  public var index: String.Index {
-    switch self {
-    case .binaryOperatorRequiresNumeric(_, let i): return i
-    case .binaryOperatorRequiresNumericOrString(_, let i): return i
-    case .unaryOperatorRequiresNumeric(_, let i): return i
-    case .undefinedVariable(_, let i): return i
-    case .internalError(let i, _): return i
-    }
-  }
+  public var description: String { return message }
+  public var index: String.Index { return location }
 }
 
 // MARK:- Source Findable

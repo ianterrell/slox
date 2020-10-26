@@ -11,6 +11,7 @@ protocol ExprVisitor {
 
   func visit(_ expr: AssignExpr) throws -> ExprResult
   func visit(_ expr: BinaryExpr) throws -> ExprResult
+  func visit(_ expr: CallExpr) throws -> ExprResult
   func visit(_ expr: GroupingExpr) throws -> ExprResult
   func visit(_ expr: LiteralExpr) throws -> ExprResult
   func visit(_ expr: LogicalExpr) throws -> ExprResult
@@ -42,6 +43,23 @@ class BinaryExpr: Expr {
     self.left = left
     self.op = op
     self.right = right
+  }
+
+  @discardableResult
+  func accept<T: ExprVisitor>(visitor: T) throws -> T.ExprResult {
+    return try visitor.visit(self)
+  }
+}
+
+class CallExpr: Expr {
+  let callee: Expr
+  let paren: Token
+  let arguments: [Expr]
+
+  init(callee: Expr, paren: Token, arguments: [Expr]) {
+    self.callee = callee
+    self.paren = paren
+    self.arguments = arguments
   }
 
   @discardableResult

@@ -76,7 +76,7 @@ class Scanner {
       if isAlpha(c) {
         return identifier()
       }
-      throw SyntaxError.unexpectedCharacter(location: start)
+      throw SyntaxError(start, "Unexpected character \(c)")
     }
 
     return nil // noop on full advancing
@@ -131,7 +131,7 @@ class Scanner {
     }
 
     guard !isAtEnd else {
-      throw SyntaxError.unterminatedString(location: start)
+      throw SyntaxError(start, "Unterminated string")
     }
 
     advance() // Consume the closing "
@@ -148,7 +148,7 @@ class Scanner {
     }
 
     guard let value = Double(currentLexeme) else {
-      throw SyntaxError.notANumber(location: start)
+      throw SyntaxError(start, "'\(currentLexeme)' is not a number")
     }
     return .NUMBER(location: start, lexeme: currentLexeme, value: value)
   }

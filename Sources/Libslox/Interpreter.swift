@@ -1,5 +1,13 @@
-class Interpreter: StmtVisitor, ExprVisitor {
-  var environment = Environment()
+public class Interpreter: StmtVisitor, ExprVisitor {
+  let globals: Environment
+  var environment: Environment
+
+  init() {
+    self.globals = Environment()
+    self.environment = globals
+
+    Builtin.register(in: globals)
+  }
 
   func interpret(_ program: [Stmt]) throws {
     try program.forEach(execute)
@@ -36,6 +44,11 @@ class Interpreter: StmtVisitor, ExprVisitor {
     } else {
       try stmt.elseBranch.flatMap(execute)
     }
+  }
+
+  func visit(_ stmt: FunctionStmt) throws {
+    let function = LoxFunction(declaration: stmt)
+    environment.define(name: stmt.name, value: .function(function))
   }
 
   func visit(_ stmt: BlockStmt) throws {
@@ -84,20 +97,28 @@ class Interpreter: StmtVisitor, ExprVisitor {
     // Type mismatches
     case (.MINUS, _, _): fallthrough
     case (.SLASH, _, _): fallthrough
-    case (.STAR, _, _): throw RuntimeError.binaryOperatorRequiresNumeric(op: expr.op.lexeme, location: expr.op.location)
+    case (.STAR, _, _): throw RuntimeError(expr.op.location, "Binary operator '\(expr.op.lexeme)' requires numeric operands")
     case (.PLUS, _, _): fallthrough
     case (.GREATER, _, _): fallthrough
     case (.GREATER_EQUAL, _, _): fallthrough
     case (.LESS, _, _): fallthrough
-    case (.LESS_EQUAL, _, _): throw RuntimeError.binaryOperatorRequiresNumericOrString(op: expr.op.lexeme, location: expr.op.location)
+    case (.LESS_EQUAL, _, _): throw RuntimeError(expr.op.location, "Binary operator '\(expr.op.lexeme)' requires both operands to be either numeric or string")
 
     // Type-agnostic equality
     case (.EQUAL_EQUAL, let lhs, let rhs): return .boolean(lhs == rhs)
     case (.BANG_EQUAL, let lhs, let rhs): return .boolean(lhs != rhs)
 
     default:
-      throw RuntimeError.internalError(location: expr.op.location, message: "Invalid operator for binary expression; should not have parsed")
+      throw RuntimeError(expr.op.location, "Invalid operator for binary expression; should not have parsed")
     }
+  }
+
+  func visit(_ expr: CallExpr) throws -> Value {
+    guard let callee  = try evaluate(expr.callee).callable else {
+      throw RuntimeError(expr.paren.location, "Expression is not a function or callable type")
+    }
+    let arguments = try expr.arguments.map(evaluate)
+    return try callee.call(interpreter: self, arguments: arguments)
   }
 
   func visit(_ expr: GroupingExpr) throws -> Value {
@@ -114,7 +135,7 @@ class Interpreter: StmtVisitor, ExprVisitor {
     case .OR: return isTruthy(left) ? left : try evaluate(expr.right)
     case .AND: return !isTruthy(left) ? left : try evaluate(expr.right)
     default:
-      throw RuntimeError.internalError(location: expr.op.location, message: "Invalid operator for logical expression; should not have parsed")
+      throw RuntimeError(expr.op.location, "Invalid operator for logical expression; should not have parsed")
     }
   }
 
@@ -123,8 +144,8 @@ class Interpreter: StmtVisitor, ExprVisitor {
     switch (expr.op, right) {
     case (.BANG, let v): return .boolean(!isTruthy(v))
     case (.MINUS, .number(let n)): return .number(-n)
-    case (.MINUS, _): throw RuntimeError.unaryOperatorRequiresNumeric(op: expr.op.lexeme, location: expr.op.location)
-    default: throw RuntimeError.internalError(location: expr.op.location, message: "Invalid operator for unary expression; should not have parsed")
+    case (.MINUS, _): throw RuntimeError(expr.op.location, "Unary operator '\(expr.op.lexeme)' requires numeric operand")
+    default: throw RuntimeError(expr.op.location, "Invalid operator for unary expression; should not have parsed")
     }
   }
 
