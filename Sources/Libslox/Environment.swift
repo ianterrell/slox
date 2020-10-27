@@ -27,6 +27,14 @@ class Environment {
     throw RuntimeError(name.location, "Variable '\(name.lexeme)' is undefined")
   }
 
+  func assign(name: Token, value: Value, distance: Int) throws {
+    guard let parent = parent, distance > 0 else {
+      try assign(name: name, value: value)
+      return
+    }
+    try parent.assign(name: name, value: value, distance: distance - 1)
+  }
+
   func get(name: Token) throws -> Value {
     if let value = values[name.lexeme] {
       return value
@@ -35,5 +43,12 @@ class Environment {
       return try parent.get(name: name)
     }
     throw RuntimeError(name.location, "Variable '\(name.lexeme)' is undefined")
+  }
+
+  func get(name: Token, distance: Int) throws -> Value {
+    guard let parent = parent, distance > 0 else {
+      return try get(name: name)
+    }
+    return try parent.get(name: name, distance: distance - 1)
   }
 }

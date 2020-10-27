@@ -24,7 +24,9 @@ public class Lox {
   public func run(_ script: String) throws {
     let tokens = try Scanner(source: script).scanTokens()
     let program = try Parser(tokens: tokens).parse()
-    try Interpreter().interpret(program)
+    let interpreter = Interpreter()
+    try Resolver(interpreter: interpreter).analyze(program)
+    try interpreter.interpret(program)
   }
 
   public func repl() {

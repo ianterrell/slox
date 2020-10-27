@@ -17,6 +17,19 @@ public struct SyntaxError: LoxError, SourceFindable, CustomStringConvertible {
   public var index: String.Index { return location }
 }
 
+public struct StaticError: LoxError, SourceFindable, CustomStringConvertible {
+  let location: String.Index
+  let message: String
+
+  init(_ location: String.Index, _ message: String) {
+    self.location = location
+    self.message = message
+  }
+
+  public var description: String { return message }
+  public var index: String.Index { return location }
+}
+
 public struct RuntimeError: LoxError, SourceFindable, CustomStringConvertible {
   let location: String.Index
   let message: String

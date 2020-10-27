@@ -6,6 +6,7 @@ Following along with [Crafting Interpreters](https://craftinginterpreters.com), 
 
 - `swift run slox` to run REPL
 - `swift run slox path/to/script.lox` to run script
+- `swift run slox path/to/script.lox --print` to output Graphviz of AST
 - `swift run genslox` to regenerate code
 
 # To Do

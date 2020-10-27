@@ -2,6 +2,8 @@ public class Interpreter: StmtVisitor, ExprVisitor {
   let globals: Environment
   var environment: Environment
 
+  var locals: [ObjectIdentifier: Int] = [:]
+
   init() {
     self.globals = Environment()
     self.environment = globals
@@ -27,6 +29,21 @@ public class Interpreter: StmtVisitor, ExprVisitor {
   func evaluate(_ expr: Expr) throws -> Value {
     return try expr.accept(visitor: self)
   }
+
+  // MARK:- Variables
+
+  func resolve(_ expr: Expr, _ depth: Int) {
+    locals[ObjectIdentifier(expr)] = depth
+  }
+
+  func lookUpVariable(_ expr: Expr, _ name: Token) throws -> Value {
+    guard let distance = locals[ObjectIdentifier(expr)] else {
+      return try globals.get(name: name)
+    }
+    return try environment.get(name: name, distance: distance)
+  }
+
+  // MARK:- Traversal
 
   func visit(_ stmt: ExpressionStmt) throws {
     _ = try evaluate(stmt.expr)
@@ -72,7 +89,11 @@ public class Interpreter: StmtVisitor, ExprVisitor {
 
   func visit(_ expr: AssignExpr) throws -> Value {
     let value = try evaluate(expr.value)
-    try environment.assign(name: expr.name, value: value)
+    guard let distance = locals[ObjectIdentifier(expr)] else {
+      try globals.assign(name: expr.name, value: value)
+      return value
+    }
+    try environment.assign(name: expr.name, value: value, distance: distance)
     return value
   }
 
@@ -154,7 +175,7 @@ public class Interpreter: StmtVisitor, ExprVisitor {
   }
 
   func visit(_ expr: VariableExpr) throws -> Value {
-    return try environment.get(name: expr.name)
+    return try lookUpVariable(expr, expr.name)
   }
 
   func isTruthy(_ value: Value) -> Bool {
