@@ -19,6 +19,7 @@ To make this language more my own, I'd like to change a few things about Lox.
 - [ ] Remove semicolons
 - [ ] Remove parentheses from conditionals; require block statement
 - [ ] Add +=, -=, /=, *= operators
+- [ ] Remove ability to invoke initializer directly
 
 ## Refactors
 

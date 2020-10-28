@@ -110,9 +110,9 @@ class PrintStmt: Stmt {
 
 class ReturnStmt: Stmt {
   let keyword: Token
-  let value: Expr
+  let value: Expr?
 
-  init(keyword: Token, value: Expr) {
+  init(keyword: Token, value: Expr?) {
     self.keyword = keyword
     self.value = value
   }

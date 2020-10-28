@@ -2,6 +2,7 @@ import Foundation
 
 public protocol LoxCallable: class {
   var arity: Int { get }
+  
   func call(interpreter: Interpreter, arguments: [Value]) throws -> Value
 }
 
@@ -42,19 +43,27 @@ extension Builtin {
 }
 
 class LoxFunction: LoxCallable, CustomStringConvertible {
-  struct Return: Error {
-    let value: Value
+  enum Return: Error {
+    case value(Value?)
   }
 
   let declaration: FunctionStmt
   let closure: Environment
+  let isInitializer: Bool
 
   var arity: Int { return declaration.params.count }
   var description: String { return "<fn \(declaration.name.lexeme)>" }
 
-  init(declaration: FunctionStmt, closure: Environment) {
+  init(declaration: FunctionStmt, closure: Environment, isInitializer: Bool) {
     self.declaration = declaration
     self.closure = closure
+    self.isInitializer = isInitializer
+  }
+
+  func bind(this instance: LoxInstance) -> LoxFunction {
+    let environment = Environment(parent: closure)
+    environment.define(name: "this", value: .instance(instance))
+    return LoxFunction(declaration: declaration, closure: environment, isInitializer: isInitializer)
   }
 
   func call(interpreter: Interpreter, arguments: [Value]) throws -> Value {
@@ -64,8 +73,11 @@ class LoxFunction: LoxCallable, CustomStringConvertible {
     }
     do {
       try interpreter.executeBlock(declaration.body, env: environment)
-    } catch let e as Return {
-      return e.value
+    } catch Return.value(let value?) {
+      return value
+    } catch {}
+    if isInitializer {
+      return try closure.get(unsafe: "this")
     }
     return .nil
   }
@@ -73,16 +85,26 @@ class LoxFunction: LoxCallable, CustomStringConvertible {
 
 public class LoxClass: LoxCallable, CustomStringConvertible {
   let name: String
+  let methods: [String: LoxFunction]
 
-  public var arity: Int { return 0 }
+  public var arity: Int { return methods["init"]?.arity ?? 0 }
   public var description: String { return "<class \(name)>" }
 
-  init(name: String) {
+  init(name: String, methods: [String: LoxFunction]) {
     self.name = name
+    self.methods = methods
+  }
+
+  func find(method: Token) -> LoxFunction? {
+    return methods[method.lexeme]
   }
 
   public func call(interpreter: Interpreter, arguments: [Value]) throws -> Value {
-    return .instance(LoxInstance(cls: self))
+    let instance = LoxInstance(cls: self)
+    if let initializer = methods["init"] {
+      _ = try initializer.bind(this: instance).call(interpreter: interpreter, arguments: arguments)
+    }
+    return .instance(instance)
   }
 }
 
@@ -96,14 +118,17 @@ public class LoxInstance: CustomStringConvertible {
     self.cls = cls
   }
 
-  func set(property: Token, value: Value) {
-    properties[property.lexeme] = value
+  func set(_ field: Token, value: Value) {
+    properties[field.lexeme] = value
   }
 
-  func get(property: Token) throws -> Value {
-    guard let value = properties[property.lexeme] else {
-      throw RuntimeError(property.location, "Undefined property '\(property.lexeme)'")
+  func get(_ field: Token) throws -> Value {
+    if let value = properties[field.lexeme] {
+      return value
     }
-    return value
+    if let method = cls.find(method: field) {
+      return .function(method.bind(this: self))
+    }
+    throw RuntimeError(field.location, "Undefined field '\(field.lexeme)'")
   }
 }

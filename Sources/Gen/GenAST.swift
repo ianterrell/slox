@@ -9,7 +9,7 @@ class ASTGenerator: BaseGenerator {
     ("ExpressionStmt", [("expr", "Expr")]),
     ("FunctionStmt", [("name", "Token"), ("params", "[Token]"), ("body", "[Stmt]")]),
     ("PrintStmt", [("expr", "Expr")]),
-    ("ReturnStmt", [("keyword", "Token"), ("value", "Expr")]),
+    ("ReturnStmt", [("keyword", "Token"), ("value", "Expr?")]),
     ("VarStmt", [("name", "Token"), ("initializer", "Expr?")]),
     ("WhileStmt", [("condition", "Expr"), ("body", "Stmt")]),
   ]
@@ -23,6 +23,7 @@ class ASTGenerator: BaseGenerator {
     ("LiteralExpr", [("value", "Value")]),
     ("LogicalExpr", [("left", "Expr"), ("op", "Token"), ("right", "Expr")]),
     ("SetExpr", [("object", "Expr"), ("name", "Token"), ("value", "Expr")]),
+    ("ThisExpr", [("keyword", "Token")]),
     ("UnaryExpr", [("op", "Token"), ("right", "Expr")]),
     ("VariableExpr", [("name", "Token")]),
   ]

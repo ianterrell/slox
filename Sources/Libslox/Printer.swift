@@ -102,8 +102,10 @@ class DotPrinterVisitor: StmtVisitor, ExprVisitor {
 
   func visit(_ stmt: ReturnStmt) throws {
     print("\(nodeName(for: stmt)) [label=\"return\" shape=box]")
-    print("\(nodeName(for: stmt)) -> \(nodeName(for: stmt.value))")
-    try! stmt.value.accept(visitor: self)
+    if let value = stmt.value {
+      print("\(nodeName(for: stmt)) -> \(nodeName(for: value))")
+      try! value.accept(visitor: self)
+    }
   }
 
   func visit(_ expr: AssignExpr) {
@@ -156,6 +158,10 @@ class DotPrinterVisitor: StmtVisitor, ExprVisitor {
     print("\(nodeName(for: expr)) [label=\"\(expr.name.lexeme)\"]")
   }
 
+  func visit(_ expr: ThisExpr) {
+    print("\(nodeName(for: expr)) [label=\"this\"]")
+  }
+
   func visit(_ expr: LogicalExpr) throws {
     print("\(nodeName(for: expr)) [label=\"\(expr.op.lexeme)\" shape=circle]")
     print("\(nodeName(for: expr)) -> \(nodeName(for: expr.left))")
@@ -165,7 +171,7 @@ class DotPrinterVisitor: StmtVisitor, ExprVisitor {
   }
 
   func visit(_ expr: SetExpr) throws {
-    print("\(nodeName(for: expr)) [label=\".\(expr.name.lexeme) =\" shape=circle]")
+    print("\(nodeName(for: expr)) [label=\".\(expr.name.lexeme) =\"]")
     print("\(nodeName(for: expr)) -> \(nodeName(for: expr.object)) [label=\"obj\"]")
     print("\(nodeName(for: expr)) -> \(nodeName(for: expr.value)) [label=\"val\"]")
     try! expr.object.accept(visitor: self)

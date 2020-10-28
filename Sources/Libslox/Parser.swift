@@ -245,7 +245,7 @@ class Parser {
     guard let _ = consume(.SEMICOLON) else {
       throw SyntaxError(previous().location, "Expect ';' after return")
     }
-    return ReturnStmt(keyword: keyword, value: value ?? LiteralExpr(value: .nil))
+    return ReturnStmt(keyword: keyword, value: value)
   }
 
   func blockStatement() throws -> Stmt {
@@ -414,6 +414,9 @@ class Parser {
     }
     if match(.IDENTIFIER) {
       return VariableExpr(name: previous())
+    }
+    if match(.THIS) {
+      return ThisExpr(keyword: previous())
     }
     if match(.LEFT_PAREN) {
       let expr = try expression()

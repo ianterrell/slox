@@ -64,12 +64,12 @@ public class Interpreter: StmtVisitor, ExprVisitor {
   }
 
   func visit(_ stmt: FunctionStmt) throws {
-    let function = LoxFunction(declaration: stmt, closure: environment)
+    let function = LoxFunction(declaration: stmt, closure: environment, isInitializer: false)
     environment.define(name: stmt.name, value: .function(function))
   }
 
   func visit(_ stmt: ReturnStmt) throws {
-    throw LoxFunction.Return(value: try evaluate(stmt.value))
+    throw LoxFunction.Return.value(try stmt.value.flatMap(evaluate))
   }
 
   func visit(_ stmt: BlockStmt) throws {
@@ -78,7 +78,13 @@ public class Interpreter: StmtVisitor, ExprVisitor {
 
   func visit(_ stmt: ClassStmt) throws {
     environment.define(name: stmt.name.lexeme, value: .nil)
-    let cls = LoxClass(name: stmt.name.lexeme)
+    var methods: [String: LoxFunction] = [:]
+    for method in stmt.methods {
+      guard let method = method as? FunctionStmt else { continue }
+      let isInit = method.name.lexeme == "init"
+      methods[method.name.lexeme] = LoxFunction(declaration: method, closure: environment, isInitializer: isInit)
+    }
+    let cls = LoxClass(name: stmt.name.lexeme, methods: methods)
     environment.define(name: stmt.name.lexeme, value: .class(cls))
   }
 
@@ -156,7 +162,7 @@ public class Interpreter: StmtVisitor, ExprVisitor {
     guard case .instance(let instance) = try evaluate(expr.object) else {
       throw RuntimeError(expr.name.location, "Only instances have properties")
     }
-    return try instance.get(property: expr.name)
+    return try instance.get(expr.name)
   }
 
   func visit(_ expr: SetExpr) throws -> Value {
@@ -164,7 +170,7 @@ public class Interpreter: StmtVisitor, ExprVisitor {
       throw RuntimeError(expr.name.location, "Only instances have fields")
     }
     let value = try evaluate(expr.value)
-    instance.set(property: expr.name, value: value)
+    instance.set(expr.name, value: value)
     return value
   }
 
@@ -198,6 +204,10 @@ public class Interpreter: StmtVisitor, ExprVisitor {
 
   func visit(_ expr: VariableExpr) throws -> Value {
     return try lookUpVariable(expr, expr.name)
+  }
+
+  func visit(_ expr: ThisExpr) throws -> Value {
+    return try lookUpVariable(expr, expr.keyword)
   }
 
   func isTruthy(_ value: Value) -> Bool {

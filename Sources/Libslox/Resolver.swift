@@ -6,6 +6,12 @@ class Resolver: StmtVisitor, ExprVisitor {
 
   enum FunctionType {
     case function
+    case method
+    case initializer
+  }
+
+  enum ClassType {
+    case `class`
   }
 
   typealias VariableMap = [String: VariableStatus]
@@ -13,6 +19,7 @@ class Resolver: StmtVisitor, ExprVisitor {
   let interpreter: Interpreter
   var scopes: [VariableMap] = [[:]]
   var currentFunction: FunctionType?
+  var currentClass: ClassType?
   var errors: [LoxError] = []
 
   init(interpreter: Interpreter) {
@@ -75,7 +82,11 @@ class Resolver: StmtVisitor, ExprVisitor {
   }
 
   func define(_ name: Token) {
-    scopes[currentScope][name.lexeme] = .defined
+    define(name.lexeme)
+  }
+
+  func define(_ name: String) {
+    scopes[currentScope][name] = .defined
   }
 
   func declareAndDefine(_ name: Token) {
@@ -98,7 +109,18 @@ class Resolver: StmtVisitor, ExprVisitor {
   }
 
   func visit(_ stmt: ClassStmt) {
+    let enclosingClass = currentClass
+    currentClass = .class
     declareAndDefine(stmt.name)
+    beginScope()
+    define("this")
+    for method in stmt.methods {
+      guard let method = method as? FunctionStmt else { continue }
+      let declaration: FunctionType = (method.name.lexeme == "init") ? .initializer : .method
+      resolveFunction(method, declaration)
+    }
+    endScope()
+    currentClass = enclosingClass
   }
 
   func visit(_ stmt: ExpressionStmt) {
@@ -118,7 +140,10 @@ class Resolver: StmtVisitor, ExprVisitor {
     if currentFunction == nil {
       errors.append(SemanticError(stmt.keyword.location, "Cannot return from top level code"))
     }
-    resolve(stmt.value)
+    if currentFunction == .initializer && stmt.value != nil {
+      errors.append(SemanticError(stmt.keyword.location, "Cannot return value from initializer"))
+    }
+    stmt.value.flatMap(resolve)
   }
 
   func visit(_ stmt: VarStmt) {
@@ -180,5 +205,12 @@ class Resolver: StmtVisitor, ExprVisitor {
       errors.append(SemanticError(expr.name.location, "Can't read local variable in its own declaration."))
     }
     resolveLocal(expr, expr.name)
+  }
+
+  func visit(_ expr: ThisExpr) {
+    if currentClass == nil {
+      errors.append(SemanticError(expr.keyword.location, "Can't use 'this' outside of a class"))
+    }
+    resolveLocal(expr, expr.keyword)
   }
 }

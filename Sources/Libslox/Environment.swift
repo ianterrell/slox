@@ -51,4 +51,8 @@ class Environment {
     }
     return try parent.get(name: name, distance: distance - 1)
   }
+
+  func get(unsafe name: String) throws -> Value {
+    return values[name]!
+  }
 }
