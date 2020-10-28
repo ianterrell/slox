@@ -17,7 +17,7 @@ public struct SyntaxError: LoxError, SourceFindable, CustomStringConvertible {
   public var index: String.Index { return location }
 }
 
-public struct StaticError: LoxError, SourceFindable, CustomStringConvertible {
+public struct SemanticError: LoxError, SourceFindable, CustomStringConvertible {
   let location: String.Index
   let message: String
 

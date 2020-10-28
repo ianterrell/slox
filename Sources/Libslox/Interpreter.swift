@@ -76,6 +76,12 @@ public class Interpreter: StmtVisitor, ExprVisitor {
     try executeBlock(stmt.statements, env: Environment(parent: environment))
   }
 
+  func visit(_ stmt: ClassStmt) throws {
+    environment.define(name: stmt.name.lexeme, value: .nil)
+    let cls = LoxClass(name: stmt.name.lexeme)
+    environment.define(name: stmt.name.lexeme, value: .class(cls))
+  }
+
   func visit(_ stmt: VarStmt) throws {
     let value = try stmt.initializer.flatMap(evaluate) ?? .nil
     environment.define(name: stmt.name, value: value)

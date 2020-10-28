@@ -1,6 +1,6 @@
 import Foundation
 
-public protocol LoxCallable {
+public protocol LoxCallable: class {
   var arity: Int { get }
   func call(interpreter: Interpreter, arguments: [Value]) throws -> Value
 }
@@ -68,5 +68,30 @@ class LoxFunction: LoxCallable, CustomStringConvertible {
       return e.value
     }
     return .nil
+  }
+}
+
+public class LoxClass: LoxCallable, CustomStringConvertible {
+  let name: String
+
+  public var arity: Int { return 0 }
+  public var description: String { return "<class \(name)>" }
+
+  init(name: String) {
+    self.name = name
+  }
+
+  public func call(interpreter: Interpreter, arguments: [Value]) throws -> Value {
+    return .instance(LoxInstance(cls: self))
+  }
+}
+
+public class LoxInstance: CustomStringConvertible {
+  let cls: LoxClass
+
+  public var description: String { return "<instance of \(cls.name)>" }
+
+  init(cls: LoxClass) {
+    self.cls = cls
   }
 }

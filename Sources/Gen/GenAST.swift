@@ -5,6 +5,7 @@ class ASTGenerator: BaseGenerator {
   static let statements: ASTList = [
     ("IfStmt", [("condition", "Expr"), ("thenBranch", "Stmt"), ("elseBranch", "Stmt?")]),
     ("BlockStmt", [("statements", "[Stmt]")]),
+    ("ClassStmt", [("name", "Token"), ("methods", "[Stmt]")]),
     ("ExpressionStmt", [("expr", "Expr")]),
     ("FunctionStmt", [("name", "Token"), ("params", "[Token]"), ("body", "[Stmt]")]),
     ("PrintStmt", [("expr", "Expr")]),

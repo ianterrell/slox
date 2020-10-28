@@ -68,7 +68,7 @@ class Resolver: StmtVisitor, ExprVisitor {
 
   func declare(_ name: Token) {
     guard scopes[currentScope][name.lexeme] == nil else {
-      errors.append(StaticError(name.location, "\(name.lexeme) is already defined in the scope"))
+      errors.append(SemanticError(name.location, "\(name.lexeme) is already defined in the scope"))
       return
     }
     scopes[currentScope][name.lexeme] = .declared
@@ -97,6 +97,10 @@ class Resolver: StmtVisitor, ExprVisitor {
     endScope()
   }
 
+  func visit(_ stmt: ClassStmt) {
+    declareAndDefine(stmt.name)
+  }
+
   func visit(_ stmt: ExpressionStmt) {
     resolve(stmt.expr)
   }
@@ -112,7 +116,7 @@ class Resolver: StmtVisitor, ExprVisitor {
 
   func visit(_ stmt: ReturnStmt) {
     if currentFunction == nil {
-      errors.append(StaticError(stmt.keyword.location, "Cannot return from top level code"))
+      errors.append(SemanticError(stmt.keyword.location, "Cannot return from top level code"))
     }
     resolve(stmt.value)
   }
@@ -164,7 +168,7 @@ class Resolver: StmtVisitor, ExprVisitor {
 
   func visit(_ expr: VariableExpr) {
     if case .declared? = scopes[currentScope][expr.name.lexeme] {
-      errors.append(StaticError(expr.name.location, "Can't read local variable in its own declaration."))
+      errors.append(SemanticError(expr.name.location, "Can't read local variable in its own declaration."))
     }
     resolveLocal(expr, expr.name)
   }

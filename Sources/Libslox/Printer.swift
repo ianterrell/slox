@@ -72,6 +72,14 @@ class DotPrinterVisitor: StmtVisitor, ExprVisitor {
     }
   }
 
+  func visit(_ stmt: ClassStmt) throws {
+    print("\(nodeName(for: stmt)) [label=\"class \(stmt.name.lexeme)\" shape=box]")
+    stmt.methods.forEach { method in
+      print("\(nodeName(for: stmt)) -> \(nodeName(for: method))")
+      try! method.accept(visitor: self)
+    }
+  }
+
   func visit(_ stmt: VarStmt) {
     print("\(nodeName(for: stmt)) [label=\"var \(stmt.name.lexeme) =\" shape=box]")
     if let initializer = stmt.initializer {
