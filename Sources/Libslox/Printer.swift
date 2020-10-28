@@ -130,6 +130,12 @@ class DotPrinterVisitor: StmtVisitor, ExprVisitor {
     }
   }
 
+  func visit(_ expr: GetExpr) throws -> () {
+    print("\(nodeName(for: expr)) [label=\".\(expr.name.lexeme)\"]")
+    print("\(nodeName(for: expr)) -> \(nodeName(for: expr.object)) [label=\"obj\"]")
+    try! expr.object.accept(visitor: self)
+  }
+
   func visit(_ expr: GroupingExpr) {
     print("\(nodeName(for: expr)) [label=\"( )\"]")
     print("\(nodeName(for: expr)) -> \(nodeName(for: expr.expr))")
@@ -156,6 +162,14 @@ class DotPrinterVisitor: StmtVisitor, ExprVisitor {
     print("\(nodeName(for: expr)) -> \(nodeName(for: expr.right))")
     try! expr.left.accept(visitor: self)
     try! expr.right.accept(visitor: self)
+  }
+
+  func visit(_ expr: SetExpr) throws {
+    print("\(nodeName(for: expr)) [label=\".\(expr.name.lexeme) =\" shape=circle]")
+    print("\(nodeName(for: expr)) -> \(nodeName(for: expr.object)) [label=\"obj\"]")
+    print("\(nodeName(for: expr)) -> \(nodeName(for: expr.value)) [label=\"val\"]")
+    try! expr.object.accept(visitor: self)
+    try! expr.value.accept(visitor: self)
   }
 
   func visit(_ expr: UnaryExpr) {

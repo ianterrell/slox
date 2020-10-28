@@ -12,9 +12,11 @@ protocol ExprVisitor {
   func visit(_ expr: AssignExpr) throws -> ExprResult
   func visit(_ expr: BinaryExpr) throws -> ExprResult
   func visit(_ expr: CallExpr) throws -> ExprResult
+  func visit(_ expr: GetExpr) throws -> ExprResult
   func visit(_ expr: GroupingExpr) throws -> ExprResult
   func visit(_ expr: LiteralExpr) throws -> ExprResult
   func visit(_ expr: LogicalExpr) throws -> ExprResult
+  func visit(_ expr: SetExpr) throws -> ExprResult
   func visit(_ expr: UnaryExpr) throws -> ExprResult
   func visit(_ expr: VariableExpr) throws -> ExprResult
 }
@@ -68,6 +70,21 @@ class CallExpr: Expr {
   }
 }
 
+class GetExpr: Expr {
+  let object: Expr
+  let name: Token
+
+  init(object: Expr, name: Token) {
+    self.object = object
+    self.name = name
+  }
+
+  @discardableResult
+  func accept<T: ExprVisitor>(visitor: T) throws -> T.ExprResult {
+    return try visitor.visit(self)
+  }
+}
+
 class GroupingExpr: Expr {
   let expr: Expr
 
@@ -103,6 +120,23 @@ class LogicalExpr: Expr {
     self.left = left
     self.op = op
     self.right = right
+  }
+
+  @discardableResult
+  func accept<T: ExprVisitor>(visitor: T) throws -> T.ExprResult {
+    return try visitor.visit(self)
+  }
+}
+
+class SetExpr: Expr {
+  let object: Expr
+  let name: Token
+  let value: Expr
+
+  init(object: Expr, name: Token, value: Expr) {
+    self.object = object
+    self.name = name
+    self.value = value
   }
 
   @discardableResult

@@ -88,10 +88,22 @@ public class LoxClass: LoxCallable, CustomStringConvertible {
 
 public class LoxInstance: CustomStringConvertible {
   let cls: LoxClass
+  var properties: [String: Value] = [:]
 
   public var description: String { return "<instance of \(cls.name)>" }
 
   init(cls: LoxClass) {
     self.cls = cls
+  }
+
+  func set(property: Token, value: Value) {
+    properties[property.lexeme] = value
+  }
+
+  func get(property: Token) throws -> Value {
+    guard let value = properties[property.lexeme] else {
+      throw RuntimeError(property.location, "Undefined property '\(property.lexeme)'")
+    }
+    return value
   }
 }

@@ -152,6 +152,22 @@ public class Interpreter: StmtVisitor, ExprVisitor {
     return try callee.call(interpreter: self, arguments: arguments)
   }
 
+  func visit(_ expr: GetExpr) throws -> Value {
+    guard case .instance(let instance) = try evaluate(expr.object) else {
+      throw RuntimeError(expr.name.location, "Only instances have properties")
+    }
+    return try instance.get(property: expr.name)
+  }
+
+  func visit(_ expr: SetExpr) throws -> Value {
+    guard case .instance(let instance) = try evaluate(expr.object) else {
+      throw RuntimeError(expr.name.location, "Only instances have fields")
+    }
+    let value = try evaluate(expr.value)
+    instance.set(property: expr.name, value: value)
+    return value
+  }
+
   func visit(_ expr: GroupingExpr) throws -> Value {
     return try evaluate(expr.expr)
   }

@@ -149,6 +149,10 @@ class Resolver: StmtVisitor, ExprVisitor {
     expr.arguments.forEach(resolve)
   }
 
+  func visit(_ expr: GetExpr) {
+    resolve(expr.object)
+  }
+
   func visit(_ expr: GroupingExpr) {
     resolve(expr.expr)
   }
@@ -160,6 +164,11 @@ class Resolver: StmtVisitor, ExprVisitor {
   func visit(_ expr: LogicalExpr) {
     resolve(expr.left)
     resolve(expr.right)
+  }
+
+  func visit(_ expr: SetExpr) {
+    resolve(expr.object)
+    resolve(expr.value)
   }
 
   func visit(_ expr: UnaryExpr) {

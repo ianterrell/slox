@@ -284,6 +284,8 @@ class Parser {
       let value = try assignment()
       if let varExpr = expr as? VariableExpr {
         return AssignExpr(name: varExpr.name, value: value)
+      } else if let getExpr = expr as? GetExpr {
+        return SetExpr(object: getExpr.object, name: getExpr.name, value: value)
       }
       throw SyntaxError(equals.location, "Invalid assignment target")
     }
@@ -365,6 +367,11 @@ class Parser {
     while true {
       if match(.LEFT_PAREN) {
         expr = try finishCall(expr)
+      } else if match(.DOT) {
+        guard let name = consume(.IDENTIFIER) else {
+          throw SyntaxError(peek().location, "Expect property name after '.'")
+        }
+        expr = GetExpr(object: expr, name: name)
       } else {
         break
       }

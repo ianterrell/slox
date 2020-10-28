@@ -18,9 +18,11 @@ class ASTGenerator: BaseGenerator {
     ("AssignExpr", [("name", "Token"), ("value", "Expr")]),
     ("BinaryExpr", [("left", "Expr"), ("op", "Token"), ("right", "Expr")]),
     ("CallExpr", [("callee", "Expr"), ("paren", "Token"), ("arguments", "[Expr]")]),
+    ("GetExpr", [("object", "Expr"), ("name", "Token")]),
     ("GroupingExpr", [("expr", "Expr")]),
     ("LiteralExpr", [("value", "Value")]),
     ("LogicalExpr", [("left", "Expr"), ("op", "Token"), ("right", "Expr")]),
+    ("SetExpr", [("object", "Expr"), ("name", "Token"), ("value", "Expr")]),
     ("UnaryExpr", [("op", "Token"), ("right", "Expr")]),
     ("VariableExpr", [("name", "Token")]),
   ]
