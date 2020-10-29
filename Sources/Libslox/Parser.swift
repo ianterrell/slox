@@ -142,6 +142,13 @@ class Parser {
     guard let name = consume(.IDENTIFIER) else {
       throw SyntaxError(peek().location, "Expect class name")
     }
+    var superclass: VariableExpr?
+    if match(.LESS) {
+      guard let identifier = consume(.IDENTIFIER) else {
+        throw SyntaxError(peek().location, "Expect superclass name")
+      }
+      superclass = VariableExpr(name: identifier)
+    }
     guard let _ = consume(.LEFT_BRACE) else {
       throw SyntaxError(peek().location, "Expect '{' before class body")
     }
@@ -152,7 +159,7 @@ class Parser {
     guard let _ = consume(.RIGHT_BRACE) else {
       throw SyntaxError(peek().location, "Expect '}' after class body")
     }
-    return ClassStmt(name: name, methods: methods)
+    return ClassStmt(name: name, superclass: superclass, methods: methods)
   }
 
   func statement() throws -> Stmt {
@@ -414,6 +421,16 @@ class Parser {
     }
     if match(.IDENTIFIER) {
       return VariableExpr(name: previous())
+    }
+    if match(.SUPER) {
+      let keyword = previous()
+      guard let _ = consume(.DOT) else {
+        throw SyntaxError(peek().location, "Expect '.' after 'super'")
+      }
+      guard let method = consume(.IDENTIFIER) else {
+        throw SyntaxError(peek().location, "Expect superclass method name")
+      }
+      return SuperExpr(keyword: keyword, method: method)
     }
     if match(.THIS) {
       return ThisExpr(keyword: previous())

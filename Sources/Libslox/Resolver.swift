@@ -12,6 +12,7 @@ class Resolver: StmtVisitor, ExprVisitor {
 
   enum ClassType {
     case `class`
+    case subclass
   }
 
   typealias VariableMap = [String: VariableStatus]
@@ -112,6 +113,17 @@ class Resolver: StmtVisitor, ExprVisitor {
     let enclosingClass = currentClass
     currentClass = .class
     declareAndDefine(stmt.name)
+    if let superclass = stmt.superclass {
+      currentClass = .subclass
+
+      if stmt.name.lexeme == superclass.name.lexeme {
+        errors.append(SemanticError(superclass.name.location, "A class cannot inherit from itself"))
+      }
+      resolve(superclass)
+
+      beginScope()
+      define("super")
+    }
     beginScope()
     define("this")
     for method in stmt.methods {
@@ -120,6 +132,11 @@ class Resolver: StmtVisitor, ExprVisitor {
       resolveFunction(method, declaration)
     }
     endScope()
+
+    if stmt.superclass != nil {
+      endScope()
+    }
+
     currentClass = enclosingClass
   }
 
@@ -205,6 +222,18 @@ class Resolver: StmtVisitor, ExprVisitor {
       errors.append(SemanticError(expr.name.location, "Can't read local variable in its own declaration."))
     }
     resolveLocal(expr, expr.name)
+  }
+
+  func visit(_ expr: SuperExpr) {
+    switch currentClass {
+    case .none:
+      errors.append(SemanticError(expr.keyword.location, "Can't use 'super' outside of a class"))
+    case .class?:
+      errors.append(SemanticError(expr.keyword.location, "Can't use 'super' in a class without a superclass"))
+    default:
+      break
+    }
+    resolveLocal(expr, expr.keyword)
   }
 
   func visit(_ expr: ThisExpr) {

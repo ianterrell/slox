@@ -85,18 +85,23 @@ class LoxFunction: LoxCallable, CustomStringConvertible {
 
 public class LoxClass: LoxCallable, CustomStringConvertible {
   let name: String
+  let superclass: LoxClass?
   let methods: [String: LoxFunction]
 
   public var arity: Int { return methods["init"]?.arity ?? 0 }
   public var description: String { return "<class \(name)>" }
 
-  init(name: String, methods: [String: LoxFunction]) {
+  init(name: String, superclass: LoxClass?, methods: [String: LoxFunction]) {
     self.name = name
+    self.superclass = superclass
     self.methods = methods
   }
 
   func find(method: Token) -> LoxFunction? {
-    return methods[method.lexeme]
+    if let thisMethod = methods[method.lexeme] {
+      return thisMethod
+    }
+    return superclass?.find(method: method)
   }
 
   public func call(interpreter: Interpreter, arguments: [Value]) throws -> Value {

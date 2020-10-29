@@ -74,6 +74,10 @@ class DotPrinterVisitor: StmtVisitor, ExprVisitor {
 
   func visit(_ stmt: ClassStmt) throws {
     print("\(nodeName(for: stmt)) [label=\"class \(stmt.name.lexeme)\" shape=box]")
+    if let superclass = stmt.superclass {
+      print("\(nodeName(for: stmt)) -> \(nodeName(for: superclass)) [label=\"superclass\"]")
+      try! superclass.accept(visitor: self)
+    }
     stmt.methods.forEach { method in
       print("\(nodeName(for: stmt)) -> \(nodeName(for: method))")
       try! method.accept(visitor: self)
@@ -156,6 +160,10 @@ class DotPrinterVisitor: StmtVisitor, ExprVisitor {
 
   func visit(_ expr: VariableExpr) {
     print("\(nodeName(for: expr)) [label=\"\(expr.name.lexeme)\"]")
+  }
+
+  func visit(_ expr: SuperExpr) {
+    print("\(nodeName(for: expr)) [label=\"super.\(expr.method.lexeme)\"]")
   }
 
   func visit(_ expr: ThisExpr) {

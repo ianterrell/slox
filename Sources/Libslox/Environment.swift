@@ -52,7 +52,11 @@ class Environment {
     return try parent.get(name: name, distance: distance - 1)
   }
 
-  func get(unsafe name: String) throws -> Value {
-    return values[name]!
+  func get(unsafe name: String, distance: Int = 0) throws -> Value {
+    var env = self
+    for _ in 0..<distance {
+      env = env.parent!
+    }
+    return env.values[name]!
   }
 }

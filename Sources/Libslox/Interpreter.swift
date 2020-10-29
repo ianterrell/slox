@@ -36,8 +36,12 @@ public class Interpreter: StmtVisitor, ExprVisitor {
     locals[ObjectIdentifier(expr)] = depth
   }
 
+  func lookupDistance(_ expr: Expr) -> Int? {
+    return locals[ObjectIdentifier(expr)]
+  }
+
   func lookUpVariable(_ expr: Expr, _ name: Token) throws -> Value {
-    guard let distance = locals[ObjectIdentifier(expr)] else {
+    guard let distance = lookupDistance(expr) else {
       return try globals.get(name: name)
     }
     return try environment.get(name: name, distance: distance)
@@ -77,14 +81,33 @@ public class Interpreter: StmtVisitor, ExprVisitor {
   }
 
   func visit(_ stmt: ClassStmt) throws {
+    var superclass: LoxClass?
+    if let superclassVar = stmt.superclass {
+      guard case .class(let stmtSuperclass) = try evaluate(superclassVar) else {
+        throw RuntimeError(superclassVar.name.location, "Superclass must be a class")
+      }
+      superclass = stmtSuperclass
+    }
+
     environment.define(name: stmt.name.lexeme, value: .nil)
+
+    if let superclass = superclass {
+      environment = Environment(parent: environment)
+      environment.define(name: "super", value: .class(superclass))
+    }
+
     var methods: [String: LoxFunction] = [:]
     for method in stmt.methods {
       guard let method = method as? FunctionStmt else { continue }
       let isInit = method.name.lexeme == "init"
       methods[method.name.lexeme] = LoxFunction(declaration: method, closure: environment, isInitializer: isInit)
     }
-    let cls = LoxClass(name: stmt.name.lexeme, methods: methods)
+    let cls = LoxClass(name: stmt.name.lexeme, superclass: superclass, methods: methods)
+
+    if superclass != nil {
+      environment = environment.parent!
+    }
+
     environment.define(name: stmt.name.lexeme, value: .class(cls))
   }
 
@@ -204,6 +227,18 @@ public class Interpreter: StmtVisitor, ExprVisitor {
 
   func visit(_ expr: VariableExpr) throws -> Value {
     return try lookUpVariable(expr, expr.name)
+  }
+
+  func visit(_ expr: SuperExpr) throws -> Value {
+    guard
+      let distance = lookupDistance(expr),
+      case .class(let superclass) = try environment.get(unsafe: "super", distance: distance),
+      case .instance(let this) = try environment.get(unsafe: "this", distance: distance - 1),
+      let method = superclass.find(method: expr.method)
+    else {
+      throw RuntimeError(expr.method.location, "Undefined property '\(expr.method.lexeme)'")
+    }
+    return .function(method.bind(this: this))
   }
 
   func visit(_ expr: ThisExpr) throws -> Value {

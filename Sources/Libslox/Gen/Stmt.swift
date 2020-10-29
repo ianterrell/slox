@@ -52,10 +52,12 @@ class BlockStmt: Stmt {
 
 class ClassStmt: Stmt {
   let name: Token
+  let superclass: VariableExpr?
   let methods: [Stmt]
 
-  init(name: Token, methods: [Stmt]) {
+  init(name: Token, superclass: VariableExpr?, methods: [Stmt]) {
     self.name = name
+    self.superclass = superclass
     self.methods = methods
   }
 

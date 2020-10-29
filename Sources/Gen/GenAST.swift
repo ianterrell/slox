@@ -5,7 +5,7 @@ class ASTGenerator: BaseGenerator {
   static let statements: ASTList = [
     ("IfStmt", [("condition", "Expr"), ("thenBranch", "Stmt"), ("elseBranch", "Stmt?")]),
     ("BlockStmt", [("statements", "[Stmt]")]),
-    ("ClassStmt", [("name", "Token"), ("methods", "[Stmt]")]),
+    ("ClassStmt", [("name", "Token"), ("superclass", "VariableExpr?"), ("methods", "[Stmt]")]),
     ("ExpressionStmt", [("expr", "Expr")]),
     ("FunctionStmt", [("name", "Token"), ("params", "[Token]"), ("body", "[Stmt]")]),
     ("PrintStmt", [("expr", "Expr")]),
@@ -23,6 +23,7 @@ class ASTGenerator: BaseGenerator {
     ("LiteralExpr", [("value", "Value")]),
     ("LogicalExpr", [("left", "Expr"), ("op", "Token"), ("right", "Expr")]),
     ("SetExpr", [("object", "Expr"), ("name", "Token"), ("value", "Expr")]),
+    ("SuperExpr", [("keyword", "Token"), ("method", "Token")]),
     ("ThisExpr", [("keyword", "Token")]),
     ("UnaryExpr", [("op", "Token"), ("right", "Expr")]),
     ("VariableExpr", [("name", "Token")]),
